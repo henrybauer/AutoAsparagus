@@ -1,5 +1,5 @@
-// this define is only for development
-//#define KSPdev
+// this define is only for development, remove it for production.
+#define KSPdev
 
 using System;
 using KSP.IO;
@@ -28,8 +28,50 @@ namespace AutoAsparagus {
 			windowRect = GUILayout.Window(100, windowRect, OnWindow, "AutoAsparagus" );
 		}
 
+		private void printTransform(string header, Transform t){
+			print (header + ": pos:" + t.localPosition.ToString () + "/rot:" + t.localRotation+"/dir:");
+			print ("    scale:" + t.localScale + "/up:" + t.up.ToString ());
+		}
+		private void printAttachNode(string header, AttachNode an){
+			print ("attachNode: " + an.id.ToString()+"/attached id:"+ an.attachedPartId.ToString() + "/" + an.attachMethod.ToString () + "/" + an.nodeType.ToString ());
+			print("      pos:"+an.position.ToString()+" or:"+an.orientation.ToString()+" offset:"+an.offset.ToString()+" size:"+an.size.ToString()+"/radius: "+an.radius.ToString());
+			print ("    rq:" + an.requestGate.ToString ());
+			if (an.attachedPart == null) {
+				print ("    null attachedPart");
+			} else {
+				printPart ("    attachedPart: ", an.attachedPart);
+			}
+		}
+
+		private void dumpPart(Part p){
+			print ("==== "+p.name.ToString () + ": " + p.uid.ToString () + "/" + p.symmetryMode.ToString ()+"/"+p.children.Count.ToString());
+			printTransform ("transform", p.transform);
+			print ("  isAttached:" + p.isAttached.ToString () + "/isConnected:" + p.isConnected.ToString ());
+			foreach (AttachNode an in p.attachNodes) {
+				printAttachNode ("    ", an);
+			}
+			if (p is FuelLine) {
+				FuelLine f = (FuelLine)p;
+
+				print ("FuelLine: fueldir:" + f.flowDirection.ToString () + "/open:" + f.fuelLineOpen.ToString () + "/maxLength:" + f.maxLength.ToString ());
+				printPart ("    fuelLookupTarget", f.fuelLookupTarget);
+				printPart ("    target", f.target);
+				print ("     dir:" + f.direction.ToString () + "/targetpos:" + f.targetPosition.ToString () + "/target");
+				printTransform ("startCap", f.startCap);
+				printTransform ("endCap", f.endCap);
+				printTransform ("line", f.line);
+				printTransform ("targetAnchor", f.targetAnchor);
+				printAttachNode ("srfAttachNode: ", f.srfAttachNode);
+			}
+		}
+
+
 		private void printPart(string header, Part p){
-			print (header +": "+p.name.ToString () + ": " + p.uid.ToString () + "/" + p.symmetryMode.ToString ());
+			if (p==null){
+				print (header + ": null!");
+			} else {
+				print (header +": "+p.name.ToString () + ": " + p.uid.ToString () + "/" + p.symmetryMode.ToString ()+"/"+p.children.Count.ToString());
+			}
 		}
 
 		private void printPartList(string title, string header, List<Part> parts){
@@ -99,6 +141,21 @@ namespace AutoAsparagus {
 
 				stage = stage - 1;
 				partNumber = partNumber + 1;
+			}
+		}
+
+		private void ListTheShip(){
+			var editor = EditorLogic.fetch;
+
+			// Get all the parts of the ship
+			var parts = editor.ship.parts;
+			printPartList("All parts of ship", "Part", parts);
+			foreach (Part p in parts) {
+				dumpPart (p);
+			}
+			// flush output buffer
+			for (int i = 1; i <= 20; i++) {
+				print ("");
 			}
 		}
 
@@ -178,7 +235,6 @@ namespace AutoAsparagus {
 
 				}
 				printPartList ("*** Completed chain", "chain part", chain);
-
 				stageChain (chain);
 			}
 
@@ -193,6 +249,111 @@ namespace AutoAsparagus {
 			Staging.SortIcons ();
 		}
 
+		//private void AttachFuelLine(Part sourceTank, Part destinationTank){
+		private void AttachFuelLine(){
+			print ("=== AttachFuelLine ===");
+			// I have no idea what I'm doing
+
+			// Get all the parts of the ship
+			EditorLogic editor = EditorLogic.fetch;
+			ShipConstruct ship = editor.ship;
+			List<Part> parts = ship.parts;
+
+			Part rootpart = parts [0];
+
+			// Make a new Part object
+			AvailablePart ap = PartLoader.getPartInfoByName ("probeStackLarge");
+			UnityEngine.Object obj = UnityEngine.Object.Instantiate(ap.partPrefab);
+			Part newPart = (Part)obj;
+
+			newPart.gameObject.SetActive(true);
+			newPart.gameObject.name = "probeStackLarge";
+			newPart.partInfo = ap;
+			//newPart.highlightRecurse = true;
+			newPart.transform.localScale = rootpart.transform.localScale;
+			newPart.transform.parent = rootpart.transform; // must be BEFORE localposition!
+			Vector3 v = new Vector3 ();
+			v.x = 0.0f;
+			v.y = -0.4f;
+			v.z = 0.0f;
+
+			Quaternion q = new Quaternion ();
+			q.x = 0.0f;
+			q.y = 0.0f;
+			q.z = 0.0f;
+			q.w = 1.0f;
+			newPart.transform.localPosition = v;
+			newPart.transform.localRotation = q;
+
+			rootpart.addChild (newPart);
+			ship.Add (newPart);
+
+			AttachNode newAN = newPart.findAttachNodes ("top") [0];
+			newAN.attachedPart = rootpart;
+			AttachNode rootAN = rootpart.findAttachNodes ("bottom") [0];
+			rootAN.attachedPart = newPart;
+
+			//Staging.SortIcons ();
+
+			return;
+			print (".. before SpawnPart");
+			//editor.SpawnPart (ap);
+
+			/*
+			ConfigNode c = new ConfigNode();
+			c.AddNode("foo");
+			c.SetValue("foo","bar");
+			*/
+			ship.Add (newPart);
+
+			newPart = ap.partPrefab;
+			ship [0].addChild (newPart);
+			//ShipConstruct newShip = new ShipConstruct ("shipname", 0, ship);
+			//editor.SpawnPart (newShip);
+
+
+			return;
+
+			print (".. before ShipConstruct.Add");
+			//ship.Add (p);
+
+		
+			print (".. before FuelLine");
+			FuelLine f = new FuelLine ();
+
+
+			//print (".. before transform");
+			//f.transform.localPosition = v;
+			//f.transform.localRotation = q;
+
+			print (".. before PartLoader");
+			PartLoader.Instantiate(f,v,q);
+			
+
+			print (".. before editorlogic");
+
+
+			print (".. before availablepart");
+			ap = new AvailablePart ("FTX-2 External Fuel Duct");
+			print (".. before spawnpart");
+			if (ap == null) {
+				print (".. ap is null!");
+			} else {
+				editor.SpawnPart (ap);
+			}
+
+			/*Transform t = transform;
+			t.localPosition = v;
+			t.localRotation = q;
+
+			sourceTank.addChild (f);
+			f.target = destinationTank;
+			f.targetAnchor = t;
+			f.targetPosition = v;
+			f.AddAttachNode(c);
+			*/
+		}
+
 		// called every screen refresh
 		private void OnWindow(int windowID){
 			var scaling = false;
@@ -202,6 +363,19 @@ namespace AutoAsparagus {
 				AsaparagusTheShip ();
 			}
 			GUILayout.EndHorizontal();
+
+			GUILayout.BeginHorizontal();
+			if (GUILayout.Button("add fuel lines")) {
+				AttachFuelLine();
+			}
+			GUILayout.EndHorizontal();
+
+			GUILayout.BeginHorizontal();
+			if (GUILayout.Button("Dump the ship")) {
+				ListTheShip ();
+			}
+			GUILayout.EndHorizontal();
+
 
 			GUI.DragWindow();
 
