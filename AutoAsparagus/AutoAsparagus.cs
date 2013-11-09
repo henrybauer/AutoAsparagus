@@ -12,7 +12,7 @@ namespace AutoAsparagus {
 [KSPAddon(KSPAddon.Startup.EditorAny, false)]
 	public class AutoAsparagus: MonoBehaviour
 	{
-
+		string xangle="0", yangle="0", zangle="0";
 		private static Rect windowRect = new Rect(0,200,50,50);
 
 		// Called after the scene is loaded.
@@ -29,9 +29,15 @@ namespace AutoAsparagus {
 		}
 
 		private void printTransform(string header, Transform t){
-			print (header + ": pos:" + t.localPosition.ToString ("F8") + "/rot:" + t.localRotation.ToString("F8"));
-			print ("    scale:" + t.localScale.ToString("F8") + "/up:" + t.up.ToString ("F8"));
+			print (header + ": localpos:" + t.localPosition.ToString ("F8") + "/localrot:" + t.localRotation.ToString("F8"));
+		print ("    pos:" + t.position.ToString ("F8") + "/rot:" + t.rotation.ToString("F8"));
+			print ("    scale:" + t.localScale.ToString("F8") + "/up:" + t.up.ToString ("F8")+"/for:"+t.forward.ToString("F8"));
 		}
+
+		private void printVector3(string header, Vector3 v){
+			print (header + ": " + v.ToString ("F8"));
+		}
+
 		private void printAttachNode(string header, AttachNode an){
 			print ("attachNode: " + an.id.ToString()+ "/" + an.attachMethod.ToString () + "/" + an.nodeType.ToString ());
 			print("      pos:"+an.position.ToString("F8")+" or:"+an.orientation.ToString("F8")+" offset:"+an.offset.ToString()+" size:"+an.size.ToString()+"/radius: "+an.radius.ToString());
@@ -260,46 +266,9 @@ namespace AutoAsparagus {
 			Staging.SortIcons ();
 		}
 
-		public static Quaternion DirectionToQuaternion(Transform transf, Vector3 nodeDirection)
-		{
-			Vector3 refDirection = Vector3.up;
-			Vector3 alterDirection = Vector3.forward;
-
-			Vector3 nodeDir = transf.TransformDirection(Vector3.Normalize(nodeDirection));
-			Vector3 refDir = transf.TransformDirection(refDirection);
-			Vector3 alterDir = transf.TransformDirection(alterDirection);
-
-			if (nodeDir == refDir)
-			{
-				return Quaternion.LookRotation(nodeDir, alterDir);
-			}
-			if (nodeDir == -refDir)
-			{
-				return Quaternion.LookRotation(nodeDir, -alterDir);
-			}
-			if (nodeDir == Vector3.zero)
-			{
-				return transf.rotation;
-			}
-			return Quaternion.LookRotation(nodeDir, refDir);
-		}
-
-
-		//private void AttachFuelLine(Part sourceTank, Part destinationTank){
-		private void AttachFuelLine(){
-			print ("=== AttachFuelLine ===");
-			// I have no idea what I'm doing
-
-			// Get all the parts of the ship
-			EditorLogic editor = EditorLogic.fetch;
-			ShipConstruct ship = editor.ship;
-			List<Part> parts = ship.parts;
-
-			Part destTank = parts [0];
-			Part sourceTank = parts [2];
-			printPart ("sourceTank", sourceTank);
-			printPart ("destTank", destTank);
-
+		private void AttachFuelLine(Part sourceTank, Part destTank){
+		print ("=== AttachFuelLine ===");
+		
 			// Make a new FuelLine object
 			AvailablePart ap = PartLoader.getPartInfoByName ("fuelLine");
 			UnityEngine.Object obj = UnityEngine.Object.Instantiate(ap.partPrefab);
@@ -314,8 +283,46 @@ namespace AutoAsparagus {
 			// set position in space, relative to source tank
 			f.transform.localScale = sourceTank.transform.localScale;
 			f.transform.parent = sourceTank.transform; // must be BEFORE localposition!
-			f.transform.localPosition = new Vector3(0.55919820f, 0.14765710f, -0.26958920f);
-			f.transform.localRotation = new Quaternion(-0.00000007f, 0.96592590f, 0.00000002f, -0.25881900f);
+
+			Vector3 midway = Vector3.Lerp (sourceTank.transform.position, destTank.transform.position, 0.5f);
+
+			Vector3 startPosition = new Vector3 ();
+			Vector3 destPosition = new Vector3 ();
+
+			printVector3 ("sourceTank",sourceTank.transform.position);
+			print("    dist: "+(Vector3.Distance(sourceTank.transform.position,midway)).ToString("F2"));
+			printVector3 ("destTank", destTank.transform.position);
+			print("    dist: "+(Vector3.Distance(destTank.transform.position,midway)).ToString("F2"));
+			printVector3 ("midway",midway);
+
+			Ray r = new Ray ();
+			r.origin = midway;
+			r.direction = (sourceTank.transform.position - midway).normalized;
+
+			RaycastHit hit = new RaycastHit();
+			if (sourceTank.collider.Raycast (r, out hit, 100)){
+				startPosition = hit.point;
+				printVector3 ("startPosition", startPosition);
+				print("    dist: "+(Vector3.Distance(startPosition,midway)).ToString("F2"));
+			} else {
+				print (" !!! ray failed!!!");
+			}
+
+			r = new Ray ();
+			r.origin = midway;
+			r.direction = (destTank.transform.position - midway).normalized;
+			hit = new RaycastHit();
+			if (destTank.collider.Raycast (r, out hit, 100)){
+				destPosition = hit.point;
+				printVector3 ("destPosition", destPosition);
+				print("    dist: "+(Vector3.Distance(destPosition,midway)).ToString("F2"));
+			} else {
+				print (" !!! ray failed!!!");
+			}
+
+			f.transform.position = startPosition;
+			f.transform.LookAt (destTank.transform);
+			f.transform.Rotate (0, 90, 0);  // need to correct results from LookAt... dunno why.
 
 			print ("    attach to source tank");
 			// attach to source tank
@@ -325,59 +332,34 @@ namespace AutoAsparagus {
 			an.attachMethod = AttachNodeMethod.HINGE_JOINT;
 			an.nodeType = AttachNode.NodeType.Surface;
 			an.size = 1;
-			an.orientation = new Vector3 (0.12500000f, 0.0f, 0.0f);
+			an.orientation = new Vector3 (0.12500000f, 0.0f, 0.0f); // seems to be a magic number
 			f.srfAttachNode = an;
-
-			//ConfigNode c = new ConfigNode ("tgt");
-			//f.AddAttachNode (c);
 
 			print ("    attach to destination");
 			// attach to destination tank
 			f.target = destTank;
 
-			//f.SetReferenceTransform (destTank.transform);
-			//f.targetPosition = new Vector3 (0.3f, 0.0f, -1.9f);
-			//f.targetPosition = new Vector3 (0.3343401f, 0.02146438f, -1.868403f);
-			print ("    targetposition");
-			f.targetPosition = new Vector3 (-0.7135226f, 0.10973600f, -0.21439850f);
 			print ("    direction");
-			f.direction = new Vector3 (-0.94747780f, 0.14571710f, -0.28469720f);
+			//f.direction = (destPosition - startPosition).normalized;
+			f.direction = f.transform.localRotation * f.transform.localPosition;
 
-
-			//float distance = Vector3.Distance(Target.part.transform.position, Origin.part.transform.position);
-			//RaycastHit info = new RaycastHit();
-			//Vector3 start = Origin.rayCastOrigin;
-			//Vector3 dir = (Target.strutTarget - start).normalized;
-			//bool hit = Physics.Raycast(new Ray(start, dir), out info, Origin.MaxDistance + 1);
-			//Part tmpp = PartFromHit(info);
-			//if (hit && tmpp == Target.part)
-			//	hit = false;
-			//
-			//if (hit)
-			//{
-			//	Target.SetErrorMessage("Obstructed by " + tmpp.name);
-			//	return;
-			//}
-
-
+			print ("    targetposition");
+			f.targetPosition = destPosition;
 
 			// add to ship
 			print ("    adding to ship");
 			sourceTank.addChild (f);
-			ship.Add (f);
 
-
-			/*
-			AttachNode newAN = newPart.findAttachNodes ("top") [0];
-			newAN.attachedPart = rootpart;
-			AttachNode rootAN = rootpart.findAttachNodes ("bottom") [0];
-			rootAN.attachedPart = newPart;
-			*/
+			EditorLogic.fetch.ship.Add (f);
 
 			Staging.SortIcons ();
 
-
-		
+#if KSPdev
+			// flush output buffer
+			for (int i = 1; i <= 20; i++) {
+				print ("");
+			}
+#endif
 
 		}
 
@@ -387,32 +369,9 @@ namespace AutoAsparagus {
 			List<Part> parts = ship.parts;
 
 			Part destTank = parts [0];
-			Part sourceTank = parts [2];
-			FuelLine f = (FuelLine)parts [3];
+			Part sourceTank = parts [4];
+			FuelLine f = (FuelLine)parts [5];
 			f.target = destTank;
-
-			print ("=== connectFuelLine");
-			print ("    position");
-			f.targetAnchor.position = new Vector3 (-1.11349300f, 0.44436970f, 0.00000000f);
-			print ("    localrotation");
-			f.targetAnchor.localRotation = new Quaternion (-0.65328160f, -0.27059750f, -0.27059760f, 0.65328180f);
-			print ("    up");
-			f.targetAnchor.up = new Vector3 (-0.49999970f, -0.00000009f, 0.86602590f);
-
-			print ("    startCap");
-			f.startCap.localPosition = new Vector3 (0.68036910f, 0.00000000f, 0.00000000f);
-			f.startCap.localRotation = new Quaternion (0.76975260f, -0.07548907f, 0.62705240f, 0.09266845f);
-			f.startCap.up = new Vector3 (-0.02691123f, 0.04799220f, -0.99848530f);
-
-			print ("    endCap");
-			f.endCap.localPosition = new Vector3 (0.86621880f, -0.05940944f, -0.00000002f);
-			f.endCap.localRotation = new Quaternion (0.74004730f, 0.22482820f, 0.61478380f, -0.15434760f);
-			f.endCap.up = new Vector3 (-0.02691123f, 0.04799220f, -0.99848530f);
-
-			print ("    line");
-			f.line.localPosition = new Vector3 (-0.08859637f, 0.00000000f, 0.00000000f);
-			f.line.localRotation = new Quaternion (0.47877080f, 0.39001420f, 0.49677200f, 0.60982380f);
-			f.line.up = new Vector3 (-0.02691123f, 0.04799220f, -0.99848530f);
 
 			print ("    target");
 
@@ -440,28 +399,68 @@ namespace AutoAsparagus {
 			}
 		}
 
+		public static Part GetPartUnderCursor()
+		{
+			Ray ray;
+			if (HighLogic.LoadedSceneIsFlight)
+			{
+				ray = FlightCamera.fetch.mainCamera.ScreenPointToRay(Input.mousePosition);
+			}
+			else
+			{
+				ray = Camera.mainCamera.ScreenPointToRay(Input.mousePosition);
+			}
+			RaycastHit hit;
+			if (Physics.Raycast(ray, out hit, 557059))
+			{
+				return hit.transform.gameObject.GetComponent<Part>();
+			}
+			else
+			{
+				return null;
+			}
+		}
+
 		// called every screen refresh
 		private void OnWindow(int windowID){
 			var scaling = false;
+			EditorLogic editor = EditorLogic.fetch;
+			ShipConstruct ship = editor.ship;
+			List<Part> parts = ship.parts;
+
+			GUIStyle buttonStyle = new GUIStyle();
+			buttonStyle = new GUIStyle(GUI.skin.button);
+			buttonStyle.wordWrap = false;
+			buttonStyle.fontStyle = FontStyle.Normal;
+			buttonStyle.normal.textColor = Color.white;
+			buttonStyle.alignment = TextAnchor.MiddleLeft;
+			buttonStyle.padding = new RectOffset(6, 2, 4, 2);
 
 			GUILayout.BeginHorizontal();
 			GUILayout.Label ("1. Create fuel tanks in symmetry");
 			GUILayout.EndHorizontal();
 
 			GUILayout.BeginHorizontal();
-			if (GUILayout.Button("2. Add fuel lines")) {
-				AttachFuelLine();
+			if (GUILayout.Button("2. Add fuel lines",buttonStyle)) {
+				// Get all the parts of the ship
+				Part destTank = parts [0];
+				Part sourceTank = parts [4];
+
+				printPart ("sourceTank", sourceTank);
+				printPart ("destTank", destTank);
+
+				AttachFuelLine(sourceTank,destTank);
 			}
 			GUILayout.EndHorizontal();
 
 			GUILayout.BeginHorizontal();
-			if (GUILayout.Button("3. Connect fuel lines")) {
+			if (GUILayout.Button("3. Connect fuel lines",buttonStyle)) {
 				connectFuelLine();
 			}
 			GUILayout.EndHorizontal();
 
 			GUILayout.BeginHorizontal();
-			if (GUILayout.Button("4. Stage decouplers and sepratrons")) {
+			if (GUILayout.Button("4. Stage decouplers and sepratrons",buttonStyle)) {
 				AsaparagusTheShip ();
 			}
 			GUILayout.EndHorizontal();
@@ -492,6 +491,38 @@ namespace AutoAsparagus {
 				GUILayout.Label("rot: ");
 				GUILayout.Label(t.rotation.ToString("F8"));
 				GUILayout.EndHorizontal();
+
+			}
+
+			GUILayout.BeginHorizontal();
+			GUILayout.EndHorizontal();
+			GUILayout.BeginHorizontal();
+			GUILayout.Label("angles: ");
+			xangle = GUILayout.TextField(xangle,3);
+			yangle = GUILayout.TextField(yangle,3);
+			zangle = GUILayout.TextField(zangle,3);
+			GUILayout.EndHorizontal();
+
+			FuelLine f=null;
+			if (parts.Count>=6){
+				if (parts[5]!=null){
+			 		f = (FuelLine)parts [5];
+				}
+			//Part p = GetPartUnderCursor();
+			if (f!=null){
+				GUILayout.BeginHorizontal();
+
+				if (GUILayout.Button("Rotate")) {
+					f.transform.Rotate (float.Parse(xangle),float.Parse(yangle),float.Parse(zangle));
+				}
+				GUILayout.EndHorizontal();
+			
+				
+			};
+			/*if (p!=null){
+					f.transform.LookAt(p.transform);
+				}
+				*/
 			}
 
 			if (EditorLogic.SelectedPart!=null) {
