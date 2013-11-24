@@ -6,7 +6,7 @@ using System.Collections.Generic;
 
 namespace AutoAsparagus
 {
-	public class ConsoleStuff: MonoBehaviour
+	public class ASPConsoleStuff: MonoBehaviour
 	{
 
 		static public void printTransform(string header, Transform t){
@@ -36,48 +36,48 @@ namespace AutoAsparagus
 	}
 
 		static public void dumpPart(Part p){
-		print ("==== "+p.name.ToString () + ": " + p.uid.ToString () + "/" + p.symmetryMode.ToString ()+"/"+p.children.Count.ToString()+"/"+p.attachMode.ToString()+"/"+p.highlightRecurse.ToString());
-		printTransform ("transform", p.transform);
-		//print ("  isAttached:" + p.isAttached.ToString () + "/isConnected:" + p.isConnected.ToString ());
-		foreach (AttachNode an in p.attachNodes) {
-			printAttachNode ("    ", an);
-		}
-		if (p is FuelLine) {
-			FuelLine f = (FuelLine)p;
+			print ("==== "+p.name.ToString () + ": " + p.uid.ToString () + "/" + p.symmetryMode.ToString ()+"/"+p.children.Count.ToString()+"/"+p.attachMode.ToString()+"/"+p.highlightRecurse.ToString());
+			printTransform ("transform", p.transform);
+			//print ("  isAttached:" + p.isAttached.ToString () + "/isConnected:" + p.isConnected.ToString ());
+			foreach (AttachNode an in p.attachNodes) {
+				printAttachNode ("    ", an);
+			}
+			if (p is FuelLine) {
+				FuelLine f = (FuelLine)p;
 
-			print ("FuelLine: fueldir:" + f.flowDirection.ToString () + "/open:" + f.fuelLineOpen.ToString () + "/maxLength:" + f.maxLength.ToString ());
-			printPart ("    fuelLookupTarget", f.fuelLookupTarget);
-			printPart ("    target", f.target);
-			print ("     dir:" + f.direction.ToString ("F8") + "/targetpos:" + f.targetPosition.ToString ("F8") + "/target");
-			printTransform ("startCap", f.startCap);
-			printTransform ("endCap", f.endCap);
-			printTransform ("line", f.line);
-			printTransform ("targetAnchor", f.targetAnchor);
-			printAttachNode ("srfAttachNode", f.srfAttachNode);
-			if (f.topNode != null) {
-				printAttachNode ("topNode", f.topNode);
+				print ("FuelLine: fueldir:" + f.flowDirection.ToString () + "/open:" + f.fuelLineOpen.ToString () + "/maxLength:" + f.maxLength.ToString ());
+				printPart ("    fuelLookupTarget", f.fuelLookupTarget);
+				printPart ("    target", f.target);
+				print ("     dir:" + f.direction.ToString ("F8") + "/targetpos:" + f.targetPosition.ToString ("F8") + "/target");
+				printTransform ("startCap", f.startCap);
+				printTransform ("endCap", f.endCap);
+				printTransform ("line", f.line);
+				printTransform ("targetAnchor", f.targetAnchor);
+				printAttachNode ("srfAttachNode", f.srfAttachNode);
+				if (f.topNode != null) {
+					printAttachNode ("topNode", f.topNode);
+				}
+			}	
+			foreach (Part child in p.children) {
+				print ("child: "+child.name.ToString () + ": " + child.uid.ToString () + "/" + child.symmetryMode.ToString ()+"/"+child.children.Count.ToString());
 			}
 		}
-		foreach (Part child in p.children) {
-			print ("child: "+child.name.ToString () + ": " + child.uid.ToString () + "/" + child.symmetryMode.ToString ()+"/"+child.children.Count.ToString());
-		}
-	}
 
 
 		static public void printPart(string header, Part p){
-		if (p==null){
-			print (header + ": null!");
-		} else {
-			print (header +": "+p.name.ToString () + ": " + p.uid.ToString () + "/" + p.symmetryMode.ToString ()+"/"+p.children.Count.ToString());
+			if (p==null){
+				print (header + ": null!");
+			} else {
+				print (header +": "+p.name.ToString () + ": " + p.uid.ToString () + "/" + p.symmetryMode.ToString ()+"/"+p.children.Count.ToString());
+			}
 		}
-	}
 
 		static public void printPartList(string title, string header, List<Part> parts){
-		print ("=== "+title+" ===");
-		foreach (Part p in parts) {
-			printPart(header,p);
+			print ("=== "+title+": "+parts.Count.ToString()+" parts ===");
+			foreach (Part p in parts) {
+				printPart(header,p);
+			}
 		}
-	}
 		static public void ListTheShip(){
 			var editor = EditorLogic.fetch;
 

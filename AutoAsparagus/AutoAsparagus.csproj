@@ -39,9 +39,9 @@
   <ItemGroup>
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="AutoAsparagus.cs" />
-    <Compile Include="ConsoleStuff.cs" />
     <Compile Include="ASPStaging.cs" />
     <Compile Include="ASPFuelLine.cs" />
+    <Compile Include="ASPConsoleStuff.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
 </Project>

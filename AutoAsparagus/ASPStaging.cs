@@ -8,7 +8,7 @@ namespace AutoAsparagus
 	public class ASPStaging: MonoBehaviour
 	{
 		static public void stageChain(List<Part> chain){
-			ConsoleStuff.printPartList ("== Staging chain", "chain part", chain);
+			ASPConsoleStuff.printPartList ("== Staging chain", "chain part", chain);
 
 			int lowestStage = Staging.StageCount-1;
 			foreach (Part p in chain) {
@@ -30,11 +30,11 @@ namespace AutoAsparagus
 			int stage = lowestStage + chain.Count - 1;
 			int partNumber = 0;
 			while (partNumber<(chain.Count-1)) {
-				ConsoleStuff.printPart ("..setting part "+partNumber.ToString()+" to stage " + stage.ToString (), chain [partNumber]);
+				ASPConsoleStuff.printPart ("..setting part "+partNumber.ToString()+" to stage " + stage.ToString (), chain [partNumber]);
 
 				// Parent should be a decoupler
 				Part parent = chain [partNumber].parent;
-				ConsoleStuff.printPart ("..parent is ", parent);
+				ASPConsoleStuff.printPart ("..parent is ", parent);
 				if (parent.name.ToLower().Contains ("decoupler")) {
 					chain [partNumber].parent.inverseStage = stage;
 				} else {
@@ -44,7 +44,7 @@ namespace AutoAsparagus
 				// Sepratrons should be children
 				foreach (Part child in chain[partNumber].children){
 					if (child.name.ToLower().Contains("sepmotor")) {
-						ConsoleStuff.printPart("..setting child Sepratron to stage "+stage.ToString(),child);
+						ASPConsoleStuff.printPart("..setting child Sepratron to stage "+stage.ToString(),child);
 						child.inverseStage = stage;
 					}
 				}
@@ -54,18 +54,8 @@ namespace AutoAsparagus
 			}
 		}
 
-		static public void AsaparagusTheShip(){
-			var editor = EditorLogic.fetch;
-
-			// Get all the parts of the ship
-			var parts = editor.ship.parts;
-			ConsoleStuff.printPartList("All parts of ship", "Part", parts);
-
-			// Find the symmetrical fuel tanks
-			List<Part> tanks = new List<Part>();
-			print ("=== Looking for symmetrical fuel tanks");
-			foreach (Part p in parts) {
-				/*				 Sample names:
+		static public bool isFuelTank(Part p){
+			    /* Sample names:
 				 * fuelTank3
 				 * cl_radial_cylTankFuel
 				 * cl_radial_cylTankOxy
@@ -75,45 +65,67 @@ namespace AutoAsparagus
                  * RCSTank1
                  */
 
-				if ((p.name.ToLower().Contains("tank") || p.name.ToLower().Contains("fuselage")) && p.symmetryMode>0) {
-					// Check if this actually has any resources besides MonoPropellant
-					// Mod packs have LiquidFuel-only and Oxydizer-only tanks, and Kethane tanks have Kethane,
-					//   so rather than check for the existence of a predefined list of fuels, just check
-					//   that this is not a Mono-Propellant-only tank.
-					PartResourceList rl = p.Resources;
-					if (rl == null) {
-						continue;
-					}
-					if (rl.Count == 0) {
-						continue;
-					}
-					bool onlyHasMono = true;
-					foreach (PartResource pr in rl.list) {
-						print ("resource name: " + pr.resourceName);
-						if (pr.resourceName.ToLower () != "monopropellant") {
-							onlyHasMono = false;
-						}
-					}
-					if (!onlyHasMono) {
-						ConsoleStuff.printPart ("Adding fuel tank", p);
-						tanks.Add (p);
-					} else {
-						// monopropellant doesn't use fuel lines!
-						ConsoleStuff.printPart("Not adding monopropellant-only tank",p);
+			if ((p.name.ToLower ().Contains ("tank")) || (p.name.ToLower ().Contains ("fuselage"))) {
+				// Check if this actually has any resources besides MonoPropellant
+				// Mod packs have LiquidFuel-only and Oxydizer-only tanks, and Kethane tanks have Kethane,
+				//   so rather than check for the existence of a predefined list of fuels, just check
+				//   that this is not a Mono-Propellant-only tank.
+				PartResourceList rl = p.Resources;
+				if (rl == null) {
+					ASPConsoleStuff.printPart ("Part is NOT a fuel tank, no resources", p);
+					return false;
+				}
+				if (rl.Count == 0) {
+					ASPConsoleStuff.printPart ("Part is NOT a fuel tank, no resources", p);
+					return false;
+				}
+				foreach (PartResource pr in rl.list) {
+					print ("resource name: " + pr.resourceName);
+					if (pr.resourceName.ToLower () != "monopropellant") {
+						ASPConsoleStuff.printPart ("Part IS a fuel tank", p);
+						return true;
 					}
 				}
+				ASPConsoleStuff.printPart ("Part is NOT a fuel tank, because it's a monopropellant tank", p);
+				return false;
+			} else {
+				ASPConsoleStuff.printPart ("Part is NOT a fuel tank, based on name", p);
+				return false;
 			}
+		}
 
+		static public List<Part> findSymettricalFuelTanks(List<Part> parts) {
+			List<Part> tanks = new List<Part>();
+			print ("=== Looking for symmetrical fuel tanks");
+			foreach (Part p in parts) {
+				if ((isFuelTank(p)) && (p.symmetryMode>0)){
+					ASPConsoleStuff.printPart ("Adding fuel tank", p);
+					tanks.Add (p);
+				}
+			}
+			return tanks;
+		}
+
+		static public void AsaparagusTheShip(){
+			var editor = EditorLogic.fetch;
+
+			// Get all the parts of the ship
+			var parts = editor.ship.parts;
+			ASPConsoleStuff.printPartList("All parts of ship", "Part", parts);
+
+			// Find the symmetrical fuel tanks
+			List<Part> tanks = findSymettricalFuelTanks (parts);
+		
 			print("=== Tanks ===");
 
 			// print out a list of tanks, partners, and children
 			foreach (Part p in tanks) {
-				ConsoleStuff.printPart ("Tank", p);
+				ASPConsoleStuff.printPart ("Tank", p);
 				foreach (Part partner in p.symmetryCounterparts) {
-					ConsoleStuff.printPart ("partner", partner);
+					ASPConsoleStuff.printPart ("partner", partner);
 				}
 				foreach (Part child in p.children) {
-					ConsoleStuff.printPart ("child", child);
+					ASPConsoleStuff.printPart ("child", child);
 				}
 
 			}
@@ -124,22 +136,22 @@ namespace AutoAsparagus
 				// start a new chain with the first tank
 				Part p = tanksToStage [0];
 				List<Part> chain = new List<Part> ();
-				ConsoleStuff.printPart ("*** Starting new chain with", p);
+				ASPConsoleStuff.printPart ("*** Starting new chain with", p);
 
 				// First, follow the fuel lines
 				while (p != null) {
-					ConsoleStuff.printPart ("Adding to chain at position " + chain.Count, p);
+					ASPConsoleStuff.printPart ("Adding to chain at position " + chain.Count, p);
 					chain.Add (p);
 
 					// don't try to put that tank in another chain
 					tanksToStage.Remove (p);
 
-					ConsoleStuff.printPart ("Following fuel line from", p);
+					ASPConsoleStuff.printPart ("Following fuel line from", p);
 					Part r = p;
 					p = null;
 					foreach (Part target in ASPFuelLine.getFuelLineTargets(r)) {
 						if (tanks.Contains(target)) {  // we're only following fuel lines in the asparagus
-							ConsoleStuff.printPart ("..followed fuel line to", target);
+							ASPConsoleStuff.printPart ("..followed fuel line to", target);
 							p = target;
 						} 
 					}
@@ -150,12 +162,12 @@ namespace AutoAsparagus
 				int x = tanksToStage.Count;
 				while (x > 0) {
 					p = tanksToStage [x-1]; // get last tank
-					ConsoleStuff.printPart ("Checking tank "+x.ToString()+" of "+tanksToStage.Count+" to insert in chain", p);
+					ASPConsoleStuff.printPart ("Checking tank "+x.ToString()+" of "+tanksToStage.Count+" to insert in chain", p);
 					x = x - 1;
 
 					foreach (Part target in ASPFuelLine.getFuelLineTargets(p)) {
 						if (chain[0]==target) {
-							ConsoleStuff.printPart ("..prepending to chain", target);
+							ASPConsoleStuff.printPart ("..prepending to chain", target);
 							chain.Insert (0, p);
 							tanksToStage.Remove(p);
 							x = tanksToStage.Count; // reset the countdown
@@ -163,7 +175,7 @@ namespace AutoAsparagus
 					}
 
 				}
-				ConsoleStuff.printPartList ("*** Completed chain", "chain part", chain);
+				ASPConsoleStuff.printPartList ("*** Completed chain", "chain part", chain);
 				stageChain (chain);
 			}
 

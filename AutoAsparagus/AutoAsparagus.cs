@@ -5,11 +5,14 @@ using System;
 using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
+using System.Reflection;
+
+// FIXME project-wide: change all parent/child checking to check grandparents/grandchildren if parent/child is a fuel tank (or anything except decoupler or fuel line)
 
 
 namespace AutoAsparagus {
 
-[KSPAddon(KSPAddon.Startup.EditorAny, false)]
+	[KSPAddon(KSPAddon.Startup.EditorVAB, false)]
 	public class AutoAsparagus: MonoBehaviour
 	{
 		private static Rect windowRect = new Rect(0,200,50,50);
@@ -25,6 +28,34 @@ namespace AutoAsparagus {
 
 		private void OnDraw(){
 			windowRect = GUILayout.Window(100, windowRect, OnWindow, "AutoAsparagus" );
+		}
+
+		private IEnumerator<object> reallyReloadShip(EditorLogic editor) {
+			yield return null; // Wait for next frame.
+			var shipCfg = editor.ship.SaveShip ();
+
+			forRealReloadShip(editor, shipCfg);
+		}
+
+		private void forRealReloadShip(EditorLogic editor, ConfigNode shipCfg){
+			// ship reloading routines are shamelessly stolen from SelectRoot: http://forum.kerbalspaceprogram.com/threads/43208-0-22-Oct17-SelectRoot-Set-a-new-root-part-0-22-fixes
+
+			editor.ship.Parts.ForEach(p => UnityEngine.Object.Destroy(p.gameObject));
+			editor.ship.Clear();
+
+			ShipConstruction.ShipConfig = shipCfg;
+			editor.ship.LoadShip(ShipConstruction.ShipConfig);
+			EditorLogic.startPod = editor.ship.parts[0].localRoot;
+			editor.SetHighlightRecursive(true, editor.ship);
+			editor.SetBackup();
+			var resetCrewFn = editor.GetType().GetMethod("ResetCrewAssignment", BindingFlags.NonPublic | BindingFlags.Instance);
+			resetCrewFn.Invoke(editor, new object[] { ShipConstruction.ShipConfig }); // I'm sorry, Squad :/
+			Staging.SortIcons();
+		}
+
+		private void ReloadShip(){
+			var editor = EditorLogic.fetch;
+			StartCoroutine (reallyReloadShip(editor));
 		}
 
 		// called every screen refresh
@@ -44,8 +75,14 @@ namespace AutoAsparagus {
 			GUILayout.EndHorizontal();
 
 			GUILayout.BeginHorizontal();
-			if (GUILayout.Button("2. Add fuel lines",buttonStyle)) {
+			if (GUILayout.Button("2a. Add fuel lines in Asparagus staging",buttonStyle)) {
 				ASPFuelLine.AddFuelLines ();
+			}
+			GUILayout.EndHorizontal();
+
+			GUILayout.BeginHorizontal();
+			if (GUILayout.Button("2b. Add fuel lines in Onion staging",buttonStyle)) {
+				ASPFuelLine.AddOnionFuelLines ();
 			}
 			GUILayout.EndHorizontal();
 
@@ -56,7 +93,7 @@ namespace AutoAsparagus {
 			GUILayout.EndHorizontal();
 
 			GUILayout.BeginHorizontal();
-			GUILayout.Label ("4. Add some empty stages for next step");
+			GUILayout.Label ("4. Add some empty stages for step 5");
 			GUILayout.EndHorizontal();
 
 			GUILayout.BeginHorizontal();
@@ -66,13 +103,15 @@ namespace AutoAsparagus {
 			GUILayout.EndHorizontal();
 
 			GUILayout.BeginHorizontal();
-			GUILayout.Label ("6. Save ship and re-load it");
+			if (GUILayout.Button("6. Reload ship",buttonStyle)) {
+				ReloadShip();
+			}
 			GUILayout.EndHorizontal();
 
 #if KSPdev
 			GUILayout.BeginHorizontal();
 			if (GUILayout.Button("Dump the ship")) {
-				ConsoleStuff.ListTheShip ();
+				ASPConsoleStuff.ListTheShip ();
 			}
 			GUILayout.EndHorizontal();
 #endif
