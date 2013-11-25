@@ -110,8 +110,18 @@ namespace AutoAsparagus {
 
 #if KSPdev
 			GUILayout.BeginHorizontal();
-			if (GUILayout.Button("Dump the ship")) {
+			if (GUILayout.Button("DEV - Dump the ship",buttonStyle)) {
 				ASPConsoleStuff.ListTheShip ();
+			}
+			GUILayout.EndHorizontal();
+
+
+			GUILayout.BeginHorizontal();
+			if (GUILayout.Button("DEV - flush output buffer",buttonStyle)) {
+				// flush output buffer
+				for (int i = 1; i <= 20; i++) {
+					print ("");
+				}
 			}
 			GUILayout.EndHorizontal();
 #endif

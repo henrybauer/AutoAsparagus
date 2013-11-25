@@ -179,13 +179,6 @@ namespace AutoAsparagus
 				stageChain (chain);
 			}
 
-			#if KSPdev
-			// flush output buffer
-			for (int i = 1; i <= 20; i++) {
-			print ("");
-			}
-			#endif
-
 			// Update staging display
 			Staging.SortIcons ();
 		}

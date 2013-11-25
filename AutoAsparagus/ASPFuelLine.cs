@@ -32,6 +32,25 @@ namespace AutoAsparagus
 			return targets;
 		}
 
+		/*private static bool isParent(Part a, Part b){
+			Part p = a;
+			while (p.parent != null) {
+				if (b == p.parent) {
+					return true;
+				}
+				p = p.parent;
+			}
+			return false;
+		}*/
+
+		private static Part findRootPart(Part p){
+			Part parent = p;
+			while (parent.parent != null) {
+				parent = parent.parent;
+			}
+			return parent;
+		}
+
 		public static void AttachFuelLine(Part sourceTank, Part destTank){
 			print ("=== AttachFuelLine ===");
 			ASPConsoleStuff.printPart ("sourceTank", sourceTank);
@@ -51,6 +70,8 @@ namespace AutoAsparagus
 			// set position in space, relative to source tank
 			f.transform.localScale = sourceTank.transform.localScale;
 			f.transform.parent = sourceTank.transform; // must be BEFORE localposition!
+			//f.transform.parent = null;
+			//f.transform.parent = findRootPart(sourceTank).transform;
 
 			Vector3 midway = Vector3.Lerp (sourceTank.transform.position, destTank.transform.position, 0.5f);
 
@@ -63,6 +84,7 @@ namespace AutoAsparagus
 			print("    dist: "+(Vector3.Distance(destTank.transform.position,midway)).ToString("F2"));
 			ASPConsoleStuff.printVector3 ("midway",midway);
 
+			Transform startTransform = null;
 			Ray r = new Ray ();
 			r.origin = midway;
 			r.direction = (sourceTank.transform.position - midway).normalized;
@@ -70,6 +92,7 @@ namespace AutoAsparagus
 			RaycastHit hit = new RaycastHit();
 			if (sourceTank.collider.Raycast (r, out hit, 1000)){
 				startPosition = hit.point;
+				startTransform = hit.transform;
 				ASPConsoleStuff.printVector3 ("startPosition", startPosition);
 				print("    dist: "+(Vector3.Distance(startPosition,midway)).ToString("F2"));
 			} else {
@@ -90,15 +113,17 @@ namespace AutoAsparagus
 				print (" !!! ray failed!!!");
 			}
 
-			//destPosition = Vector3.MoveTowards(destPosition, destTank.transform.position, 0.1f); //kludge to make sure the fuel line connects
-			//destPosition = Vector3.Lerp(destPosition, destTank.transform.position, 0.2f); //kludge to make sure the fuel line connects
-			//destPosition = destTank.transform.position;
-			//destPosition = destTank.transform.position;
-
 			f.transform.position = startPosition;
+			//f.transform.parent = startTransform.parent;
+			//f.transform.position = startTransform.position;
+			//f.transform.rotation = startTransform.rotation;
+
+			// Aim the fuel node starting position at the destination position so we can calculate the direction later
 			//f.transform.LookAt (destTransform);
-			f.transform.LookAt (destTank.transform);
 			//f.transform.LookAt (destPosition);
+			f.transform.up = sourceTank.transform.up;
+			f.transform.forward = sourceTank.transform.forward;
+			f.transform.LookAt (destTank.transform);
 			f.transform.Rotate (0, 90, 0);  // need to correct results from LookAt... dunno why.
 
 			print ("    attach to source tank");
@@ -116,13 +141,36 @@ namespace AutoAsparagus
 			// attach to destination tank
 			f.target = destTank;
 
-			print ("    direction");
-			f.direction = f.transform.localRotation * f.transform.localPosition;
-
-			//f.direction=(f.transform.position - destTank.transform.position).normalized;
-
 			print ("    targetposition");
 			f.targetPosition = destPosition;
+
+			print ("    direction");
+			//f.direction=(f.transform.position - destTank.transform.position).normalized;
+			//f.direction = f.transform.localRotation * f.transform.localPosition;  // only works if destTank is parent
+			//f.direction = (f.transform.InverseTransformPoint(destTank.transform.position) - f.transform.localPosition).normalized;  // works but crooked
+			//f.direction = (f.transform.InverseTransformPoint(destPosition) - f.transform.localPosition).normalized; // doesn't connect
+			//f.direction = (f.transform.InverseTransformPoint(destPosition) - f.transform.localPosition); // doesn't connect
+			f.direction = f.transform.InverseTransformPoint (destTank.transform.position).normalized;  // correct!
+
+			/*if (isParent(sourceTank,destTank)){
+				f.direction = f.transform.localRotation * f.transform.localPosition;
+			} else {
+				f.direction = (f.transform.InverseTransformPoint(destTank.transform.position) - f.transform.localPosition).normalized;
+			}*/
+
+			/*
+			r = new Ray ();
+			r.origin = startPosition;
+			r.direction = f.direction;
+			hit = new RaycastHit();
+			if (destTank.collider.Raycast (r, out hit, 1000)){
+				ASPConsoleStuff.printVector3 ("f.direction hits at", hit.point);
+				ASPConsoleStuff.printVector3 ("destPosition at", destPosition);
+				print("    dist: "+(Vector3.Distance(hit.point,midway)).ToString("F2"));
+			} else {
+				print (" !!! f.direction ray failed!!!");
+			}*/
+
 
 			// add to ship
 			print ("    adding to ship");

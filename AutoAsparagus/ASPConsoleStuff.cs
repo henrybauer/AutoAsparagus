@@ -46,17 +46,18 @@ namespace AutoAsparagus
 				FuelLine f = (FuelLine)p;
 
 				print ("FuelLine: fueldir:" + f.flowDirection.ToString () + "/open:" + f.fuelLineOpen.ToString () + "/maxLength:" + f.maxLength.ToString ());
-				printPart ("    fuelLookupTarget", f.fuelLookupTarget);
+				//printPart ("    fuelLookupTarget", f.fuelLookupTarget);
 				printPart ("    target", f.target);
 				print ("     dir:" + f.direction.ToString ("F8") + "/targetpos:" + f.targetPosition.ToString ("F8") + "/target");
-				printTransform ("startCap", f.startCap);
+				/*printTransform ("startCap", f.startCap);
 				printTransform ("endCap", f.endCap);
 				printTransform ("line", f.line);
 				printTransform ("targetAnchor", f.targetAnchor);
 				printAttachNode ("srfAttachNode", f.srfAttachNode);
 				if (f.topNode != null) {
 					printAttachNode ("topNode", f.topNode);
-				}
+				}*/
+				printPart ("transform.parent part", (Part)f.transform.parent.gameObject);
 			}	
 			foreach (Part child in p.children) {
 				print ("child: "+child.name.ToString () + ": " + child.uid.ToString () + "/" + child.symmetryMode.ToString ()+"/"+child.children.Count.ToString());
@@ -86,10 +87,6 @@ namespace AutoAsparagus
 			printPartList("All parts of ship", "Part", parts);
 			foreach (Part p in parts) {
 				dumpPart (p);
-			}
-			// flush output buffer
-			for (int i = 1; i <= 20; i++) {
-				print ("");
 			}
 		}
 	}
