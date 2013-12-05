@@ -72,24 +72,24 @@ namespace AutoAsparagus
 				//   that this is not a Mono-Propellant-only tank.
 				PartResourceList rl = p.Resources;
 				if (rl == null) {
-					ASPConsoleStuff.printPart ("Part is NOT a fuel tank, no resources", p);
+					ASPConsoleStuff.printPart ("isFuelTank: Part is NOT a fuel tank, no resources", p);
 					return false;
 				}
 				if (rl.Count == 0) {
-					ASPConsoleStuff.printPart ("Part is NOT a fuel tank, no resources", p);
+					ASPConsoleStuff.printPart ("isFuelTank: Part is NOT a fuel tank, no resources", p);
 					return false;
 				}
 				foreach (PartResource pr in rl.list) {
-					print ("resource name: " + pr.resourceName);
+					print ("isFuelTank: resource name: " + pr.resourceName);
 					if (pr.resourceName.ToLower () != "monopropellant") {
-						ASPConsoleStuff.printPart ("Part IS a fuel tank", p);
+						ASPConsoleStuff.printPart ("isFuelTank: Part IS a fuel tank", p);
 						return true;
 					}
 				}
-				ASPConsoleStuff.printPart ("Part is NOT a fuel tank, because it's a monopropellant tank", p);
+				ASPConsoleStuff.printPart ("isFuelTank: Part is NOT a fuel tank, because it's a monopropellant tank", p);
 				return false;
 			} else {
-				ASPConsoleStuff.printPart ("Part is NOT a fuel tank, based on name", p);
+				ASPConsoleStuff.printPart ("isFuelTank: Part is NOT a fuel tank, based on name", p);
 				return false;
 			}
 		}

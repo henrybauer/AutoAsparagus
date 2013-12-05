@@ -8,7 +8,7 @@ using System.Collections.Generic;
 using System.Reflection;
 
 // FIXME project-wide: change all parent/child checking to check grandparents/grandchildren if parent/child is a fuel tank (or anything except decoupler or fuel line)
-
+// FIXME position fuel lines to avoid obstructions
 
 namespace AutoAsparagus {
 
@@ -71,44 +71,53 @@ namespace AutoAsparagus {
 			buttonStyle.padding = new RectOffset(6, 2, 4, 2);
 
 			GUILayout.BeginHorizontal();
-			GUILayout.Label ("1. Create fuel tanks in symmetry");
-			GUILayout.EndHorizontal();
-
-			GUILayout.BeginHorizontal();
-			if (GUILayout.Button("2a. Add fuel lines in Asparagus staging",buttonStyle)) {
+			GUILayout.Label ("1. Add fuel lines:");
+			if (GUILayout.Button("Asparagus",buttonStyle)) {
 				ASPFuelLine.AddFuelLines ();
 			}
-			GUILayout.EndHorizontal();
-
-			GUILayout.BeginHorizontal();
-			if (GUILayout.Button("2b. Add fuel lines in Onion staging",buttonStyle)) {
+			if (GUILayout.Button ("Onion", buttonStyle)) {
 				ASPFuelLine.AddOnionFuelLines ();
 			}
 			GUILayout.EndHorizontal();
 
 			GUILayout.BeginHorizontal();
-			if (GUILayout.Button("3. Connect fuel lines",buttonStyle)) {
+			if (GUILayout.Button("2. Connect fuel lines",buttonStyle)) {
 				ASPFuelLine.connectFuelLines();
+				ReloadShip();
 			}
 			GUILayout.EndHorizontal();
 
 			GUILayout.BeginHorizontal();
-			GUILayout.Label ("4. Add some empty stages for step 5");
+			GUILayout.Label ("3. Add some empty stages for staging");
 			GUILayout.EndHorizontal();
 
 			GUILayout.BeginHorizontal();
-			if (GUILayout.Button("5. Stage decouplers and sepratrons",buttonStyle)) {
+			if (GUILayout.Button("4. Stage decouplers and sepratrons",buttonStyle)) {
 				ASPStaging.AsaparagusTheShip ();
 			}
 			GUILayout.EndHorizontal();
 
 			GUILayout.BeginHorizontal();
-			if (GUILayout.Button("6. Reload ship",buttonStyle)) {
+			GUILayout.Label ("5. Save and re-load ship");
+			GUILayout.EndHorizontal();
+
+			GUILayout.BeginHorizontal();
+			if (GUILayout.Button("Delete all fuel lines",buttonStyle)) {
+				ASPFuelLine.DeleteAllFuelLines ();
 				ReloadShip();
 			}
 			GUILayout.EndHorizontal();
 
+
 #if KSPdev
+
+			GUILayout.BeginHorizontal();
+			if (GUILayout.Button("DEV - Reload ship",buttonStyle)) {
+				ReloadShip();
+			}
+			GUILayout.EndHorizontal();
+
+
 			GUILayout.BeginHorizontal();
 			if (GUILayout.Button("DEV - Dump the ship",buttonStyle)) {
 				ASPConsoleStuff.ListTheShip ();
