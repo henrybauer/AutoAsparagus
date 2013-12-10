@@ -51,6 +51,109 @@ namespace AutoAsparagus
 			return parent;
 		}
 
+		private static Vector3 vector3direction(Vector3 from, Vector3 to){
+			// I can never remember which way the math goes
+			return (to - from).normalized;
+		}
+
+		private static bool fireRayAt(Part p, Vector3 origin, Vector3 dest, out Vector3 collisionpoint){
+			Ray r = new Ray ();
+			r.origin = origin;
+			r.direction = vector3direction (origin, dest);
+			float distance = Vector3.Distance (origin, dest);
+
+			RaycastHit hit = new RaycastHit ();
+			if (p.collider.Raycast (r, out hit, distance)) {
+				collisionpoint = hit.point;
+				return true;
+			} else {
+				collisionpoint = origin;
+				//ASPConsoleStuff.printPart ("!! ray failed aiming at", p);
+				return false;
+			}
+		}
+
+		private static void getStartDestPositions(Part sourceTank, Part destTank, Vector3 midway, out Vector3 startPosition, out Vector3 destPosition){
+			fireRayAt (sourceTank, midway, sourceTank.transform.position, out startPosition);
+			fireRayAt (destTank, midway, destTank.transform.position, out destPosition);
+		}
+
+
+		private static Boolean isFLpathObstructed(Part sourceTank,Part destTank,Vector3 midway){
+			Vector3 startPosition = new Vector3 ();
+			Vector3 destPosition = new Vector3 ();
+			getStartDestPositions (sourceTank, destTank, midway, out startPosition, out destPosition);
+
+			EditorLogic editor = EditorLogic.fetch;
+			ShipConstruct ship = editor.ship;
+			List<Part> parts = ship.parts;
+
+			ASPConsoleStuff.printVector3 ("testing midway", midway);
+			Vector3 collisionpoint = new Vector3 ();
+			foreach (Part p in parts) {
+				if ((p==sourceTank) || (p==destTank)){
+					continue;
+				}
+				if (fireRayAt (p, startPosition, destPosition, out collisionpoint)) {
+					ASPConsoleStuff.printPart ("**** fuel line is obstructed at "+collisionpoint.ToString("F2")+" by", p);
+					return true;
+				}
+
+			}
+
+			/*Ray r = new Ray ();	
+			r.origin = midway;
+			r.direction = (midway - destPosition).normalized;
+			RaycastHit hit = new RaycastHit ();
+			if (Physics.Linecast (startPosition, destPosition, out hit)) {
+				if (hit.rigidbody) {
+				Part p = hit.rigidbody.GetComponent<Part> ();
+				ASPConsoleStuff.printPart ("***** fuel line will collide with part", p);
+				}
+				return true;
+			};
+
+			List<RaycastHit> hits = new List<RaycastHit> ();
+
+			hits = new List<RaycastHit> (Physics.RaycastAll(r, Vector3.Distance (midway,destPosition)));
+			foreach (RaycastHit h in hits) {
+				if (h.collider == sourceTank.collider) {
+					continue;
+				}
+				if (h.collider == destTank.collider) {
+					continue;
+				}
+				if (h.rigidbody) {
+					Part p = h.rigidbody.GetComponent<Part> ();
+					ASPConsoleStuff.printPart ("***** fuel line will collide with part", p);
+				}
+				return true;
+			}
+
+			r = new Ray ();	
+			r.origin = midway;
+			r.direction = (midway - startPosition).normalized;
+
+			// go both ways in case we start inside an object
+			hits = new List<RaycastHit> (Physics.RaycastAll(r, Vector3.Distance (midway,startPosition)));
+			foreach (RaycastHit h in hits) {
+				if (h.collider == sourceTank.collider) {
+					continue;
+				}
+				if (h.collider == destTank.collider) {
+					continue;
+				}
+				if (h.rigidbody) {
+					Part p = h.rigidbody.GetComponent<Part> ();
+					ASPConsoleStuff.printPart ("***** fuel line will collide with part", p);
+				}
+				return true;
+			}*/
+
+			return false;
+		}
+
+
 		public static void AttachFuelLine(Part sourceTank, Part destTank){
 			print ("=== AttachFuelLine ===");
 			ASPConsoleStuff.printPart ("sourceTank", sourceTank);
@@ -78,40 +181,137 @@ namespace AutoAsparagus
 			Vector3 startPosition = new Vector3 ();
 			Vector3 destPosition = new Vector3 ();
 
-			ASPConsoleStuff.printVector3 ("sourceTank",sourceTank.transform.position);
-			print("    dist: "+(Vector3.Distance(sourceTank.transform.position,midway)).ToString("F2"));
+			ASPConsoleStuff.printVector3 ("sourceTank", sourceTank.transform.position);
+			print ("    dist: " + (Vector3.Distance (sourceTank.transform.position, midway)).ToString ("F2"));
 			ASPConsoleStuff.printVector3 ("destTank", destTank.transform.position);
-			print("    dist: "+(Vector3.Distance(destTank.transform.position,midway)).ToString("F2"));
-			ASPConsoleStuff.printVector3 ("midway",midway);
+			print ("    dist: " + (Vector3.Distance (destTank.transform.position, midway)).ToString ("F2"));
+			ASPConsoleStuff.printVector3 ("midway", midway);
 
-			Transform startTransform = null;
-			Ray r = new Ray ();
-			r.origin = midway;
-			r.direction = (sourceTank.transform.position - midway).normalized;
+			float adjustmentincrement = 0.5f; // how much to move the midpoint
+			float adjustment=0.0f;
+			bool flcollide = isFLpathObstructed (sourceTank, destTank, midway);
+			while ((flcollide) && (adjustment<3)) {
+				Vector3 newmidway = new Vector3 (midway.x, midway.y, midway.z);
+				adjustment = adjustment + adjustmentincrement;
+				adjustmentincrement = adjustmentincrement * 2f;
 
-			RaycastHit hit = new RaycastHit();
-			if (sourceTank.collider.Raycast (r, out hit, 1000)){
-				startPosition = hit.point;
-				startTransform = hit.transform;
-				ASPConsoleStuff.printVector3 ("startPosition", startPosition);
-				print("    dist: "+(Vector3.Distance(startPosition,midway)).ToString("F2"));
-			} else {
-				print (" !!! ray failed!!!");
+				/*
+				f.transform.position = midway;
+				f.transform.LookAt (destTank.transform);
+				f.transform.Rotate (0, 90, 0);
+				f.transform.localPosition = f.transform.localRotation * new Vector3 (0, 0, adjustment);
+				newmidway = f.transform.position;
+				flcollide = isFLpathObstructed (sourceTank, destTank, newmidway);
+				if (!flcollide) {
+					midway = newmidway;
+					break;
+				}
+				print ("break!");
+				flcollide = false;
+				*/
+
+					/*if (flcollide) {
+					Vector3 adjDirection = (sourceTank.transform.position - midway).normalized;
+					Quaternion q = Quaternion.AngleAxis(90,Vector3.forward);
+					adjDirection = q * adjDirection;
+					adjDirection = adjDirection * adjustmentincrement;
+					newmidway = newmidway + adjDirection;
+					flcollide = isFLpathObstructed (sourceTank, destTank, newmidway);
+					if (!flcollide) {
+						midway = newmidway;
+				}*/
+
+
+				foreach (float yinc in new float[] {0f, adjustmentincrement, -adjustmentincrement}) {
+					newmidway.y = midway.y + yinc;
+					foreach (float xinc in new float[] {0f, adjustmentincrement, -adjustmentincrement}) {
+						newmidway.x = midway.x + xinc;
+						foreach (float zinc in new float[] {0f, adjustmentincrement, -adjustmentincrement}) {
+							newmidway.z = midway.z + zinc;
+							flcollide = isFLpathObstructed (sourceTank, destTank, newmidway);
+							if (!flcollide) {
+								midway = newmidway;
+								break;
+							}
+						}
+						if (!flcollide) {
+							midway = newmidway;
+							break;
+						}
+					}
+					if (!flcollide) {
+						midway = newmidway;
+						break;
+					}
+				}
+
+
+				/*
+				if (flcollide) {
+					newmidway.y = newmidway.y + adjustment;
+					flcollide = isFLpathObstructed (sourceTank, destTank, newmidway);
+				
+					if (flcollide) {
+						newmidway.y = newmidway.y - adjustment - adjustment;
+						flcollide = isFLpathObstructed (sourceTank, destTank, newmidway);
+						if (!flcollide) {
+							midway = newmidway;
+						}
+					} else {
+						midway = newmidway;
+					}
+				}
+				if (flcollide) {
+					newmidway.y = midway.y; // only move in one dimension at once
+					newmidway.x = newmidway.x + adjustment;
+					ASPConsoleStuff.printVector3 ("Testing new midway", newmidway);
+					flcollide = isFLpathObstructed (sourceTank, destTank, newmidway);
+
+					if (flcollide) {
+						newmidway.x = newmidway.x - adjustment - adjustment;
+						ASPConsoleStuff.printVector3 ("Testing new midway", newmidway);
+						flcollide = isFLpathObstructed (sourceTank, destTank, newmidway);
+						if (!flcollide) {
+							midway = newmidway;
+						}
+					} else {
+						midway = newmidway;
+					}
+				}
+				if (flcollide) {
+					newmidway.x = midway.x; // only move in one dimension at once
+					newmidway.z = newmidway.z + adjustment;
+					ASPConsoleStuff.printVector3 ("Testing new midway", newmidway);
+					flcollide = isFLpathObstructed (sourceTank, destTank, newmidway);
+
+					if (flcollide) {
+						newmidway.z = newmidway.z - adjustment - adjustment;
+						ASPConsoleStuff.printVector3 ("Testing new midway", newmidway);
+						flcollide = isFLpathObstructed (sourceTank, destTank, newmidway);
+						if (!flcollide) {
+							midway = newmidway;
+						}
+					} else {
+						midway = newmidway;
+					}
+				}
+				*/
+				/*if (flcollide) {
+					Vector3 adjDirection = (sourceTank.transform.position - midway).normalized;
+					Quaternion q = Quaternion.AngleAxis(90,Vector3.forward);
+					adjDirection = q * adjDirection;
+					adjDirection = adjDirection * adjustmentincrement;
+					newmidway = newmidway + adjDirection;
+					flcollide = isFLpathObstructed (sourceTank, destTank, newmidway);
+					if (!flcollide) {
+						midway = newmidway;
+					}
+			}*/
 			}
-
-			Transform destTransform = null;
-			r = new Ray ();
-			r.origin = midway;
-			r.direction = (destTank.transform.position - midway).normalized;
-			hit = new RaycastHit();
-			if (destTank.collider.Raycast (r, out hit, 1000)){
-				destPosition = hit.point;
-				destTransform = hit.transform;
-				ASPConsoleStuff.printVector3 ("destPosition", destPosition);
-				print("    dist: "+(Vector3.Distance(destPosition,midway)).ToString("F2"));
-			} else {
-				print (" !!! ray failed!!!");
-			}
+			ASPConsoleStuff.printVector3 ("New midway is", midway);
+			getStartDestPositions (sourceTank, destTank, midway, out startPosition, out destPosition);
+			ASPConsoleStuff.printVector3 ("startPosition", startPosition);
+			ASPConsoleStuff.printVector3 ("destPosition", destPosition);
 
 			f.transform.position = startPosition;
 			//f.transform.parent = startTransform.parent;
@@ -133,7 +333,7 @@ namespace AutoAsparagus
 			an.attachedPart = sourceTank;
 			an.attachMethod = AttachNodeMethod.HINGE_JOINT;
 			an.nodeType = AttachNode.NodeType.Surface;
-			an.size = 1;
+			an.size = 1;  // found from inspecting fuel lines
 			an.orientation = new Vector3 (0.12500000f, 0.0f, 0.0f); // seems to be a magic number
 			f.srfAttachNode = an;
 

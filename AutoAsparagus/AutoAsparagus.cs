@@ -1,5 +1,5 @@
 // this define is only for development, remove it for production.
-#define KSPdev
+//#define KSPdev
 
 using System;
 using UnityEngine;

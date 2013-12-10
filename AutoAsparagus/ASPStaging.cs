@@ -64,34 +64,36 @@ namespace AutoAsparagus
                  * KW1mtankPancake
                  * RCSTank1
                  */
-
-			if ((p.name.ToLower ().Contains ("tank")) || (p.name.ToLower ().Contains ("fuselage"))) {
-				// Check if this actually has any resources besides MonoPropellant
-				// Mod packs have LiquidFuel-only and Oxydizer-only tanks, and Kethane tanks have Kethane,
-				//   so rather than check for the existence of a predefined list of fuels, just check
-				//   that this is not a Mono-Propellant-only tank.
-				PartResourceList rl = p.Resources;
-				if (rl == null) {
-					ASPConsoleStuff.printPart ("isFuelTank: Part is NOT a fuel tank, no resources", p);
-					return false;
-				}
-				if (rl.Count == 0) {
-					ASPConsoleStuff.printPart ("isFuelTank: Part is NOT a fuel tank, no resources", p);
-					return false;
-				}
-				foreach (PartResource pr in rl.list) {
-					print ("isFuelTank: resource name: " + pr.resourceName);
-					if (pr.resourceName.ToLower () != "monopropellant") {
-						ASPConsoleStuff.printPart ("isFuelTank: Part IS a fuel tank", p);
-						return true;
+			if ((p!=null) && (p.name != null)) {
+				if ((p.name.ToLower ().Contains ("tank")) || (p.name.ToLower ().Contains ("fuselage"))) {
+					// Check if this actually has any resources besides MonoPropellant
+					// Mod packs have LiquidFuel-only and Oxydizer-only tanks, and Kethane tanks have Kethane,
+					//   so rather than check for the existence of a predefined list of fuels, just check
+					//   that this is not a Mono-Propellant-only tank.
+					PartResourceList rl = p.Resources;
+					if (rl == null) {
+						ASPConsoleStuff.printPart ("isFuelTank: Part is NOT a fuel tank, no resources", p);
+						return false;
 					}
+					if (rl.Count == 0) {
+						ASPConsoleStuff.printPart ("isFuelTank: Part is NOT a fuel tank, no resources", p);
+						return false;
+					}
+					foreach (PartResource pr in rl.list) {
+						print ("isFuelTank: resource name: " + pr.resourceName);
+						if (pr.resourceName.ToLower () != "monopropellant") {
+							ASPConsoleStuff.printPart ("isFuelTank: Part IS a fuel tank", p);
+							return true;
+						}
+					}
+					ASPConsoleStuff.printPart ("isFuelTank: Part is NOT a fuel tank, because it's a monopropellant tank", p);
+					return false;
+				} else {
+					ASPConsoleStuff.printPart ("isFuelTank: Part is NOT a fuel tank, based on name", p);
+					return false;
 				}
-				ASPConsoleStuff.printPart ("isFuelTank: Part is NOT a fuel tank, because it's a monopropellant tank", p);
-				return false;
-			} else {
-				ASPConsoleStuff.printPart ("isFuelTank: Part is NOT a fuel tank, based on name", p);
-				return false;
 			}
+			return false;
 		}
 
 		static public List<Part> findSymettricalFuelTanks(List<Part> parts) {
