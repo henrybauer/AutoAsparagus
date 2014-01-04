@@ -45,9 +45,7 @@
     <Compile Include="ASPStaging.cs" />
     <Compile Include="ASPFuelLine.cs" />
     <Compile Include="ASPConsoleStuff.cs" />
+    <Compile Include="ASPUpdateCheck.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
-  <ItemGroup>
-    <None Include="VERSION.txt" />
-  </ItemGroup>
 </Project>

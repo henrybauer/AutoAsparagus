@@ -1,5 +1,5 @@
 // this define is only for development, remove it for production.
-#define KSPdev
+//#define KSPdev
 
 using System;
 using UnityEngine;
@@ -90,6 +90,8 @@ namespace AutoAsparagus {
 					visible = false;
 				}
 			};
+
+			//ASPUpdateCheck u = new ASPUpdateCheck (); // doesn't work?
 		}
 
 		internal void setStyles() {
@@ -324,9 +326,11 @@ namespace AutoAsparagus {
 			stagesepratrons = GUILayout.Toggle (stagesepratrons, new GUIContent(" Stage sepratrons", sepratronTexture, "Stage sepratrons to fire with decouplers"), togglestyle);
 			GUILayout.EndHorizontal();
 
+			/* not yet, but soon!
 			GUILayout.BeginHorizontal();
 			addStruts = GUILayout.Toggle (addStruts, new GUIContent(" Add struts", strutTexture, "Add struts along with fuel lines"), togglestyle);
 			GUILayout.EndHorizontal();
+			*/
 
 			if (!stageLaunchClamps) {
 				minheight = windowRect.height;
