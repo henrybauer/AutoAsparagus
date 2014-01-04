@@ -35,6 +35,9 @@
     <Reference Include="UnityEngine">
       <HintPath>..\..\..\dev\Kerbal Space Program\KSP.app\Contents\Data\Managed\UnityEngine.dll</HintPath>
     </Reference>
+    <Reference Include="aaa_Toolbar">
+      <HintPath>..\..\..\dev\Kerbal Space Program\GameData\000_Toolbar\Toolbar.dll</HintPath>
+    </Reference>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Properties\AssemblyInfo.cs" />
@@ -44,4 +47,7 @@
     <Compile Include="ASPConsoleStuff.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
+  <ItemGroup>
+    <None Include="VERSION.txt" />
+  </ItemGroup>
 </Project>

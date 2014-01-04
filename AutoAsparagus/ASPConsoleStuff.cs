@@ -1,8 +1,8 @@
 using System;
-using KSP.IO;
 using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace AutoAsparagus
 {
@@ -18,7 +18,6 @@ namespace AutoAsparagus
 		static public void printVector3(string header, Vector3 v){
 		print (header + ": " + v.ToString ("F8"));
 	}
-
 		static public void printAttachNode(string header, AttachNode an){
 		print ("attachNode: " + an.id.ToString()+ "/" + an.attachMethod.ToString () + "/" + an.nodeType.ToString ());
 		print("      pos:"+an.position.ToString("F8")+" or:"+an.orientation.ToString("F8")+" offset:"+an.offset.ToString()+" size:"+an.size.ToString()+"/radius: "+an.radius.ToString());

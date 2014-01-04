@@ -7,6 +7,21 @@ namespace AutoAsparagus
 {
 	public class ASPStaging: MonoBehaviour
 	{
+
+		static private void stageChildren(Part p, int stage){
+			// Sepratrons should be children
+			foreach (Part child in p.children){
+				if ((AutoAsparagus.stagesepratrons) && (child.name.ToLower().Contains("sepmotor"))) {
+					ASPConsoleStuff.printPart("..setting child Sepratron to stage "+stage.ToString(),child);
+					child.inverseStage = stage;
+				}
+				if ((AutoAsparagus.stageParachutes) && (child.name.ToLower().Contains("parachute"))) {
+					ASPConsoleStuff.printPart("..setting child Parachute to stage "+stage.ToString(),child);
+					child.inverseStage = stage;
+				}
+			}
+
+		}
 		static public void stageChain(List<Part> chain){
 			ASPConsoleStuff.printPartList ("== Staging chain", "chain part", chain);
 
@@ -20,38 +35,44 @@ namespace AutoAsparagus
 			print ("..lowest stage is "+lowestStage.ToString()+"/"+Staging.StageCount.ToString());
 			print ("..adding " + (chain.Count - 1).ToString() + " stages");
 
-			// this screws things up, don't do it
-			/*			int x = chain.Count-1;
-			while (x > 0) {
-				Staging.AddStageAt (lowestStage+1);
-				x = x - 1;
-			}*/
-
 			int stage = lowestStage + chain.Count - 1;
 			int partNumber = 0;
-			while (partNumber<(chain.Count-1)) {
-				ASPConsoleStuff.printPart ("..setting part "+partNumber.ToString()+" to stage " + stage.ToString (), chain [partNumber]);
-
+			while (partNumber<(chain.Count)) {
 				// Parent should be a decoupler
 				Part parent = chain [partNumber].parent;
 				ASPConsoleStuff.printPart ("..parent is ", parent);
 				if (parent.name.ToLower().Contains ("decoupler")) {
+					ASPConsoleStuff.printPart ("..setting part " + partNumber.ToString () + " to stage " + stage.ToString (), chain [partNumber]);
 					chain [partNumber].parent.inverseStage = stage;
+					chain [partNumber].inverseStage = stage;
+					stageChildren(chain[partNumber],stage);
 				} else {
 					print ("..parent is not a decoupler, ignoring!");
-				}
-
-				// Sepratrons should be children
-				foreach (Part child in chain[partNumber].children){
-					if (child.name.ToLower().Contains("sepmotor")) {
-						ASPConsoleStuff.printPart("..setting child Sepratron to stage "+stage.ToString(),child);
-						child.inverseStage = stage;
-					}
 				}
 
 				stage = stage - 1;
 				partNumber = partNumber + 1;
 			}
+		}
+
+		static public void StageLaunchClamps() {
+			var editor = EditorLogic.fetch;
+
+			// Get all the parts of the ship
+			var parts = editor.ship.parts;
+
+			int stage = Staging.StageCount - 1;
+			if (AutoAsparagus.launchClampsStage == 1) {
+				stage = stage - 1;
+			}
+
+			foreach (Part p in parts) {
+				if (p.name.ToLower ().Contains ("launchclamp")) {
+					ASPConsoleStuff.printPart ("Putting launch clamp into stage " + stage.ToString (), p);
+					p.inverseStage = stage;
+				}
+			}
+
 		}
 
 		static public bool isFuelTank(Part p){
@@ -69,7 +90,7 @@ namespace AutoAsparagus
 					// Check if this actually has any resources besides MonoPropellant
 					// Mod packs have LiquidFuel-only and Oxydizer-only tanks, and Kethane tanks have Kethane,
 					//   so rather than check for the existence of a predefined list of fuels, just check
-					//   that this is not a Mono-Propellant-only tank.
+					//   that this is not a MonoPropellant-only tank.
 					PartResourceList rl = p.Resources;
 					if (rl == null) {
 						ASPConsoleStuff.printPart ("isFuelTank: Part is NOT a fuel tank, no resources", p);
@@ -100,12 +121,81 @@ namespace AutoAsparagus
 			List<Part> tanks = new List<Part>();
 			print ("=== Looking for symmetrical fuel tanks");
 			foreach (Part p in parts) {
-				if ((isFuelTank(p)) && (p.symmetryMode>0)){
+				if ((isFuelTank(p)) && (p.symmetryMode>0) && (!isFuelTank(p.parent))){
 					ASPConsoleStuff.printPart ("Adding fuel tank", p);
 					tanks.Add (p);
 				}
 			}
 			return tanks;
+		}
+
+		static public void DeleteEmptyStages() {
+			var editor = EditorLogic.fetch;
+
+			// Get all the parts of the ship
+			var parts = editor.ship.parts;
+
+			List<int> usedstages = new List<int> ();
+
+			while (usedstages.Count != Staging.StageCount) {
+				usedstages = new List<int> ();
+				foreach (Part p in parts) {
+					if (!usedstages.Contains (p.inverseStage)) {
+						usedstages.Add (p.inverseStage);
+					}
+				}
+				for (int x = Staging.StageCount; x > 0; x = x - 1) {
+					if (!usedstages.Contains (x)) {
+						//StageGroup sg = new StageGroup();
+						// how in the world do I get a StageGroup object for stage x??
+						//Staging.DeleteStage (sg);
+
+					}
+				}
+
+			}
+
+		}
+
+		static public void AddEmptyStages() {
+			var editor = EditorLogic.fetch;
+
+			// Get all the parts of the ship
+			var parts = editor.ship.parts;
+
+			List<Part> decouplers = new List<Part>();
+			foreach (Part p in parts) {
+				if (p.name.ToLower ().Contains ("decoupler")) {
+					if (p.symmetryMode > 0) {
+						decouplers.Add (p);
+					}
+				}
+			}
+			List<Part> decouplers2 = decouplers;
+			List<int> usedstages = new List<int> ();
+
+			while (decouplers.Count>0){
+				Part p = decouplers [0];
+
+				if (usedstages.Contains (p.inverseStage)) {
+					Staging.AddStageAt (p.inverseStage + 1);
+					p.inverseStage = p.inverseStage + 1;
+				}
+				int x = p.symmetryMode / 2;
+				while (x > 0) {
+					usedstages.Add (p.inverseStage);
+					x = x - 1;
+				}
+				decouplers.Remove (p);
+				foreach (Part brother in p.symmetryCounterparts) {
+					brother.inverseStage = p.inverseStage;
+					decouplers.Remove (brother);
+				}
+			}
+
+			foreach (Part p in decouplers2) {
+				Staging.AddStageAt (p.inverseStage + 1);
+			}
 		}
 
 		static public void AsaparagusTheShip(){
