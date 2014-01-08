@@ -478,7 +478,7 @@ namespace AutoAsparagus
 			int currentChainLength = chainLength;
 			Part lastTank = currentTank;
 			Part nextTank = null;
-			int safetyfactor 10000;
+			int safetyfactor = 10000;
 			while (currentChainLength > 0) {
 				safetyfactor = safetyfactor - 1;
 				if (safetyfactor == 0) {
@@ -514,7 +514,7 @@ namespace AutoAsparagus
 			List<Part> children = rootPart.children;
 			Part currentTank = null;
 			ASPConsoleStuff.printPartList ("rootChildren", "child", children);
-			int safetyfactor 10000;
+			int safetyfactor = 10000;
 			while ((currentTank == null) && (children.Count>0)) {
 				safetyfactor = safetyfactor - 1;
 				if (safetyfactor == 0) {
@@ -554,7 +554,7 @@ namespace AutoAsparagus
 			List<Part> tanksToConnect = new List<Part> ();
 
 			// get list of tanks to connect
-			int safetyfactor 10000;
+			int safetyfactor = 10000;
 			while (tanks.Count > 0) {
 				safetyfactor = safetyfactor - 1;
 				if (safetyfactor == 0) {
@@ -576,7 +576,7 @@ namespace AutoAsparagus
 			}
 
 			Part nextTank = null;
-			safetyfactor 10000;
+			safetyfactor = 10000;
 			while (tanksToConnect.Count > 0) {
 				safetyfactor = safetyfactor - 1;
 				if (safetyfactor == 0) {

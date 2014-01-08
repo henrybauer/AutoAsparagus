@@ -37,7 +37,7 @@ namespace AutoAsparagus
 
 			int stage = lowestStage + chain.Count - 1;
 			int partNumber = 0;
-			int safetyfactor 10000;
+			int safetyfactor = 10000;
 			while (partNumber<(chain.Count)) {
 				safetyfactor = safetyfactor - 1;
 				if (safetyfactor == 0) {
@@ -182,7 +182,7 @@ namespace AutoAsparagus
 			List<Part> decouplers2 = decouplers;
 			List<int> usedstages = new List<int> ();
 
-			int safetyfactor 10000;
+			int safetyfactor = 10000;
 			while (decouplers.Count>0){
 				safetyfactor = safetyfactor - 1;
 				if (safetyfactor == 0) {
@@ -239,7 +239,7 @@ namespace AutoAsparagus
 
 			// Make chains by following fuel lines
 			List<Part> tanksToStage = tanks;
-			int safetyfactor 10000;
+			int safetyfactor = 10000;
 			while (tanksToStage.Count > 0) {
 				safetyfactor = safetyfactor - 1;
 				if (safetyfactor == 0) {
