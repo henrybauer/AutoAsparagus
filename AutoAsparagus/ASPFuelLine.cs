@@ -14,7 +14,7 @@ namespace AutoAsparagus
 			public FuelLine fl { get; set; }
 		}
 
-		private static List<FuelSet> fuelSetsToConnect;
+		private static List<FuelSet> fuelSetsToConnect = new List<FuelSet>();
 
 		public static List<Part> getFuelLineTargets(Part p){
 			ASPConsoleStuff.printPart ("...searching fuel lines of part", p);
@@ -383,7 +383,7 @@ namespace AutoAsparagus
 			fs.toPart = destTank;
 			fs.fl = f;
 			fuelSetsToConnect.Add (fs);
-			print ("    added to fuelSetsToConnect");
+		print ("    added to fuelSetsToConnect, total: "+fuelSetsToConnect.Count.ToString());
 
 		}
 
@@ -478,7 +478,15 @@ namespace AutoAsparagus
 			int currentChainLength = chainLength;
 			Part lastTank = currentTank;
 			Part nextTank = null;
+			int safetyfactor 10000;
 			while (currentChainLength > 0) {
+				safetyfactor = safetyfactor - 1;
+				if (safetyfactor == 0) {
+					AutoAsparagus.osd ("Infinite loop in makeFuelLineChain, aborting :(");
+					AutoAsparagus.mystate = AutoAsparagus.ASPState.IDLE;
+					return null;
+				}
+
 				ASPConsoleStuff.printPart ("connecting chain link #" + currentChainLength.ToString (), currentTank);
 				nextTank = nearestNeighborWithoutFuelLine (currentTank);
 				if (nextTank == null) {
@@ -506,7 +514,14 @@ namespace AutoAsparagus
 			List<Part> children = rootPart.children;
 			Part currentTank = null;
 			ASPConsoleStuff.printPartList ("rootChildren", "child", children);
+			int safetyfactor 10000;
 			while ((currentTank == null) && (children.Count>0)) {
+				safetyfactor = safetyfactor - 1;
+				if (safetyfactor == 0) {
+					AutoAsparagus.osd ("Infinite loop in findStartofChain, aborting :(");
+					AutoAsparagus.mystate = AutoAsparagus.ASPState.IDLE;
+					return null;
+				}
 				List<Part> newchildren = new List<Part>();
 				// check every child at this level, before moving a level down the tree
 				foreach (Part child in children) {
@@ -532,14 +547,21 @@ namespace AutoAsparagus
 			List<Part> parts = ship.parts;
 
 			// start a new list of fuel lines to connect
-			fuelSetsToConnect = new List<FuelSet>();
+		//fuelSetsToConnect = new List<FuelSet>();
 
 			// Find the symmetrical fuel tanks
 			List<Part> tanks = ASPStaging.findSymettricalFuelTanks (parts);
 			List<Part> tanksToConnect = new List<Part> ();
 
 			// get list of tanks to connect
+			int safetyfactor 10000;
 			while (tanks.Count > 0) {
+				safetyfactor = safetyfactor - 1;
+				if (safetyfactor == 0) {
+					AutoAsparagus.osd ("Infinite loop in AddFuelLines:tanks.Count, aborting :(");
+					AutoAsparagus.mystate = AutoAsparagus.ASPState.IDLE;
+					return;
+				}
 				Part p = tanks [0];
 				bool connectTank = true;
 				if (hasFuelLine(p)) {
@@ -554,7 +576,14 @@ namespace AutoAsparagus
 			}
 
 			Part nextTank = null;
+			safetyfactor 10000;
 			while (tanksToConnect.Count > 0) {
+				safetyfactor = safetyfactor - 1;
+				if (safetyfactor == 0) {
+					AutoAsparagus.osd ("Infinite loop in AddFuelLines:tanksToConnect.Count, aborting :(");
+					AutoAsparagus.mystate = AutoAsparagus.ASPState.IDLE;
+					return;
+				}
 				if (nextTank == null) {
 					nextTank = findStartofChain (tanksToConnect, parts [0]);
 				}
@@ -595,6 +624,7 @@ namespace AutoAsparagus
 					if ((!hasFuelLine (p)) && (!isTargetofFuelLine(p))) {
 						print ("... no fuel lines");
 						Part parentTank = findParentFuelTank (p);
+					/*
 						if ((hasFuelLine (parentTank)) && (!isTargetofFuelLine(parentTank))) {
 							ASPConsoleStuff.printPart ("... parent has fuel line but isn't target, returning p",p);
 							// tank that starts an inner chain
@@ -605,7 +635,13 @@ namespace AutoAsparagus
 							ASPConsoleStuff.printPart ("... gp is null, returning p",p);
 							// we're on the first ring.. just return any part
 							return p;
-						} 
+						}
+					*/
+					if (!isTargetofFuelLine(parentTank)) {
+						ASPConsoleStuff.printPart ("... parent isn't target of fuel line, returning p",p);
+						// tank that starts an inner chain
+						return p;
+					}
 					}
 				}
 			}
@@ -620,7 +656,7 @@ namespace AutoAsparagus
 			List<Part> parts = ship.parts;
 
 			// start a new list of fuel lines to connect
-			fuelSetsToConnect = new List<FuelSet>();
+		//fuelSetsToConnect = new List<FuelSet>();
 
 			// Find the symmetrical fuel tanks
 			List<Part> tanks = ASPStaging.findSymettricalFuelTanks (parts);

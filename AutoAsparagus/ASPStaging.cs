@@ -37,7 +37,14 @@ namespace AutoAsparagus
 
 			int stage = lowestStage + chain.Count - 1;
 			int partNumber = 0;
+			int safetyfactor 10000;
 			while (partNumber<(chain.Count)) {
+				safetyfactor = safetyfactor - 1;
+				if (safetyfactor == 0) {
+					AutoAsparagus.osd ("Infinite loop in stageChain, aborting :(");
+					AutoAsparagus.mystate = AutoAsparagus.ASPState.IDLE;
+					return;
+				}
 				// Parent should be a decoupler
 				Part parent = chain [partNumber].parent;
 				ASPConsoleStuff.printPart ("..parent is ", parent);
@@ -129,6 +136,7 @@ namespace AutoAsparagus
 			return tanks;
 		}
 
+		/*
 		static public void DeleteEmptyStages() {
 			var editor = EditorLogic.fetch;
 
@@ -155,7 +163,7 @@ namespace AutoAsparagus
 
 			}
 
-		}
+		}*/
 
 		static public void AddEmptyStages() {
 			var editor = EditorLogic.fetch;
@@ -174,7 +182,14 @@ namespace AutoAsparagus
 			List<Part> decouplers2 = decouplers;
 			List<int> usedstages = new List<int> ();
 
+			int safetyfactor 10000;
 			while (decouplers.Count>0){
+				safetyfactor = safetyfactor - 1;
+				if (safetyfactor == 0) {
+					AutoAsparagus.osd ("Infinite loop in AddEmptyStages, aborting :(");
+					AutoAsparagus.mystate = AutoAsparagus.ASPState.IDLE;
+					return;
+				}
 				Part p = decouplers [0];
 
 				if (usedstages.Contains (p.inverseStage)) {
@@ -224,7 +239,14 @@ namespace AutoAsparagus
 
 			// Make chains by following fuel lines
 			List<Part> tanksToStage = tanks;
+			int safetyfactor 10000;
 			while (tanksToStage.Count > 0) {
+				safetyfactor = safetyfactor - 1;
+				if (safetyfactor == 0) {
+					AutoAsparagus.osd ("Infinite loop in AsaparagusTheShip:tanksToStage.Count, aborting :(");
+					AutoAsparagus.mystate = AutoAsparagus.ASPState.IDLE;
+					return;
+				}
 				// start a new chain with the first tank
 				Part p = tanksToStage [0];
 				List<Part> chain = new List<Part> ();

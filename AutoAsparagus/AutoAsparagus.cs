@@ -1,5 +1,5 @@
 // this define is only for development, remove it for production.
-//#define KSPdev
+#define KSPdev
 
 using System;
 using UnityEngine;
@@ -27,14 +27,14 @@ namespace AutoAsparagus {
 		private float minwidth = 1;
 		private float minheight = 1;
 
-		enum ASPState { IDLE, ADDASP, ADDONION, CONNECT, ADDSTAGES, STAGE, RELOAD, DELETEFUEL, AFTERSTAGE, CLAMPS };
-		private ASPState mystate = ASPState.IDLE;
+		public enum ASPState { IDLE, ADDASP, ADDONION, CONNECT, AFTERCONNECT, ADDSTAGES, STAGE, RELOAD, DELETEFUEL, AFTERSTAGE, CLAMPS };
+		public static ASPState mystate = ASPState.IDLE;
 		private int refreshwait = 0;
 
 		private static Texture2D aspTexture = null;
 		private static Texture2D onionTexture = null;
 		private static Texture2D nofuelTexture = null;
-		private static Texture2D strutTexture = null;
+		//private static Texture2D strutTexture = null;
 		private static Texture2D parachuteTexture = null;
 		private static Texture2D launchclampTexture = null;
 		private static Texture2D sepratronTexture = null;
@@ -53,8 +53,8 @@ namespace AutoAsparagus {
 		private GUIStyle osdstyle = null;
 
 		private string tooltip = "";
-		private string osdmessage = null;
-		private float osdtime = Time.time;
+		private static string osdmessage = null;
+		private static float osdtime = Time.time;
 
 		private static Texture2D loadTexture(string path) {
 			print ("=== AutoAsparagus loading texture: " + path);
@@ -155,7 +155,7 @@ namespace AutoAsparagus {
 			nofuelTexture = loadTexture ("AutoAsparagus/nofuel");
 			launchclampTexture = loadTexture ("AutoAsparagus/launchclamp");
 			parachuteTexture = loadTexture ("AutoAsparagus/parachute");
-			strutTexture = loadTexture ("AutoAsparagus/strut");
+			//strutTexture = loadTexture ("AutoAsparagus/strut");
 			sepratronTexture = loadTexture ("AutoAsparagus/sepratron");
 		}
 
@@ -167,7 +167,7 @@ namespace AutoAsparagus {
 			return rect;
 		}
 
-		private void osd(string message){
+		public static void osd(string message){
 			osdmessage = message;
 			osdtime = Time.time + 3.0f;
 		}
@@ -191,7 +191,7 @@ namespace AutoAsparagus {
 					switch (mystate) {
 					case ASPState.IDLE:
 
-						windowRect = clampToScreen(GUILayout.Window (100, windowRect, OnWindow, "AutoAsparagus"));
+						windowRect = clampToScreen(GUILayout.Window (9035768, windowRect, OnWindow, "AutoAsparagus"));
 
 						if (tooltip != "") {
 							GUI.depth = 0;
@@ -208,19 +208,24 @@ namespace AutoAsparagus {
 						ASPFuelLine.AddFuelLines ();
 						mystate = ASPState.CONNECT;
 						osd("Connecting fuel lines...");
-						refreshwait = 10;
+						refreshwait = 100;
 						break;
 					case ASPState.ADDONION:
 						ASPFuelLine.AddOnionFuelLines ();
 						mystate = ASPState.CONNECT;
 						osd("Connecting fuel lines...");
-						refreshwait = 10;
+						refreshwait = 100;
 						break;
 					case ASPState.CONNECT:
 						ASPFuelLine.connectFuelLines ();
+						refreshwait = 100;
+						osd ("Refreshing ship...");
+						mystate = ASPState.AFTERCONNECT;
+						break;
+					case ASPState.AFTERCONNECT:
 						ReloadShip ();
 						mystate = ASPState.ADDSTAGES;
-						osd("Adding empty stages...");
+						osd ("Adding empty stages...");
 						refreshwait = 100;
 						break;
 					case ASPState.ADDSTAGES:
