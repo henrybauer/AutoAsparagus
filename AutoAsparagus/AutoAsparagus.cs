@@ -1,5 +1,5 @@
 // this define is only for development, remove it for production.
-#define KSPdev
+//#define KSPdev
 
 using System;
 using UnityEngine;
@@ -55,6 +55,8 @@ namespace AutoAsparagus {
 		private string tooltip = "";
 		private static string osdmessage = null;
 		private static float osdtime = Time.time;
+
+		private int windowID = new System.Random().Next(int.MaxValue);
 
 		private static Texture2D loadTexture(string path) {
 			print ("=== AutoAsparagus loading texture: " + path);
@@ -191,7 +193,7 @@ namespace AutoAsparagus {
 					switch (mystate) {
 					case ASPState.IDLE:
 
-						windowRect = clampToScreen(GUILayout.Window (9035768, windowRect, OnWindow, "AutoAsparagus"));
+						windowRect = clampToScreen(GUILayout.Window (windowID, windowRect, OnWindow, "AutoAsparagus"));
 
 						if (tooltip != "") {
 							GUI.depth = 0;
