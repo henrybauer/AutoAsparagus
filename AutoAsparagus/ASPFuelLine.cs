@@ -471,8 +471,28 @@ namespace AutoAsparagus
 			// 4-way symmetry will have (4-2)/2 = 1 for each side
 			// 2-way symmetry will have (2-2)/2 = 0 for each side (we will just connect the tanks to the central tank)
 
-			int chainLength = ((currentTank.symmetryMode - 1) / 2);
-			print("Fuel line chain length: "+chainLength.ToString());
+			int numberOfTanks = (currentTank.symmetryMode + 1);
+			int tanksToDropAtOnce = 2;
+
+			int[] primes = new int[] {
+				17,
+				13,
+				11,
+				7,
+				5,
+				3,	
+				2,
+			};
+
+			foreach (int prime in primes) {
+				if ((numberOfTanks % prime) == 0) {
+					tanksToDropAtOnce = prime;
+				}
+			}
+
+			int chainLength = ((currentTank.symmetryMode - 1) / tanksToDropAtOnce);
+
+		print("Fuel line chain length: "+chainLength.ToString()+", dropping "+tanksToDropAtOnce.ToString()+" tanks at once (from "+numberOfTanks.ToString()+" tanks)");
 
 			// Now connect chainLength number of tanks to the first part
 			int currentChainLength = chainLength;
