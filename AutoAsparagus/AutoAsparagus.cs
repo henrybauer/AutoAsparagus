@@ -58,6 +58,9 @@ namespace AutoAsparagus {
 
 		private int windowID = new System.Random().Next(int.MaxValue);
 
+		private Vector2 mousepos;
+		private Boolean editorlocked = false;
+
 		private static Texture2D loadTexture(string path) {
 			print ("=== AutoAsparagus loading texture: " + path);
 			return GameDatabase.Instance.GetTexture(path, false);
@@ -193,7 +196,21 @@ namespace AutoAsparagus {
 					switch (mystate) {
 					case ASPState.IDLE:
 
-						windowRect = clampToScreen(GUILayout.Window (windowID, windowRect, OnWindow, "AutoAsparagus"));
+						windowRect = clampToScreen (GUILayout.Window (windowID, windowRect, OnWindow, "AutoAsparagus"));
+
+						mousepos = new Vector2 (Input.mousePosition.x, Input.mousePosition.y);
+
+						if (HighLogic.LoadedSceneIsEditor) {
+							if (windowRect.Contains(mousepos)) {
+								if (editorlocked == false) {
+									EditorLogic.fetch.Lock(true, true, true, "AutoAsparagus");
+									editorlocked = true;
+								}
+							} else if (editorlocked==true) {
+								EditorLogic.fetch.Unlock("AutoAsparagus");
+								editorlocked = false;
+							}
+						}
 
 						if (tooltip != "") {
 							GUI.depth = 0;
