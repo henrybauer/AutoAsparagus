@@ -3,7 +3,7 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProductVersion>10.0.0</ProductVersion>
+    <ProductVersion>8.0.30703</ProductVersion>
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>{BD117790-2F92-410B-9437-018C17220308}</ProjectGuid>
     <OutputType>Library</OutputType>
@@ -35,8 +35,8 @@
     <Reference Include="UnityEngine">
       <HintPath>..\..\..\dev\Kerbal Space Program\KSP.app\Contents\Data\Managed\UnityEngine.dll</HintPath>
     </Reference>
-    <Reference Include="aaa_Toolbar">
-      <HintPath>..\..\..\dev\Kerbal Space Program\GameData\000_Toolbar\Toolbar.dll</HintPath>
+    <Reference Include="Assembly-CSharp-firstpass">
+      <HintPath>..\..\..\dev\Kerbal Space Program\KSP.app\Contents\Data\Managed\Assembly-CSharp-firstpass.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>
@@ -45,7 +45,6 @@
     <Compile Include="ASPStaging.cs" />
     <Compile Include="ASPFuelLine.cs" />
     <Compile Include="ASPConsoleStuff.cs" />
-    <Compile Include="ASPUpdateCheck.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
 </Project>

@@ -6,7 +6,7 @@ using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
 using System.Reflection;
-using Toolbar;
+//using Toolbar;
 using KSP.IO;
 
 // FIXME project-wide: change all parent/child checking to check grandparents/grandchildren if parent/child is a fuel tank (or anything except decoupler or fuel line)
@@ -19,11 +19,11 @@ namespace AutoAsparagus {
 	[KSPAddon(KSPAddon.Startup.EditorVAB, false)]
 	public class AutoAsparagus: MonoBehaviour
 	{
-		private IButton aspButton;
+		//private IButton aspButton;
 		//private IButton onionButton;
 		private bool visible = false;
 
-		private Rect windowRect = new Rect(Screen.width/2,Screen.height * 0.1f,1,1);
+		private Rect windowRect = new Rect(Screen.width * 0.35f,Screen.height * 0.1f,1,1);
 		private float minwidth = 1;
 		private float minheight = 1;
 
@@ -32,6 +32,7 @@ namespace AutoAsparagus {
 		private int refreshwait = 0;
 
 		private static Texture2D aspTexture = null;
+		private static Texture2D appTexture = null;
 		private static Texture2D onionTexture = null;
 		private static Texture2D nofuelTexture = null;
 		//private static Texture2D strutTexture = null;
@@ -60,6 +61,8 @@ namespace AutoAsparagus {
 
 		private Vector2 mousepos;
 		private Boolean editorlocked = false;
+		private ApplicationLauncherButton appButton = null;
+		private Boolean setupApp = false;
 
 		private static Texture2D loadTexture(string path) {
 			print ("=== AutoAsparagus loading texture: " + path);
@@ -83,6 +86,7 @@ namespace AutoAsparagus {
 		}
 
 		internal AutoAsparagus() {
+			/* print ("AutoAsparagus: Setting up toolbar");
 			aspButton = ToolbarManager.Instance.add ("AutoAsparagus", "aspButton");
 			aspButton.TexturePath = "AutoAsparagus/asparagus";
 			aspButton.ToolTip = "AutoAsparagus";
@@ -95,9 +99,12 @@ namespace AutoAsparagus {
 					visible = false;
 				}
 			};
+			*/
 
 			//ASPUpdateCheck u = new ASPUpdateCheck (); // doesn't work?
+
 		}
+	
 
 		internal void setStyles() {
 			tooltipstyle = new GUIStyle(GUI.skin.box);
@@ -145,17 +152,21 @@ namespace AutoAsparagus {
 		}
 
 		internal void OnDestroy() {
-			aspButton.Destroy ();
+			//aspButton.Destroy ();
+			ApplicationLauncher.Instance.RemoveModApplication (appButton);
 		}
 
 		// Called after the scene is loaded.
 		public void Awake() {
 			//RenderingManager.AddToPostDrawQueue(0, OnDraw);
+			print ("AutoAsparagus: hooking OnGUIAppLauncherReady");
+			GameEvents.onGUIApplicationLauncherReady.Add(setupAppButton);
 		}
 
 		// Called after Awake()
 		public void Start() {
 			aspTexture = loadTexture ("AutoAsparagus/asparagus");
+			appTexture = loadTexture ("AutoAsparagus/asparagus-app");
 			onionTexture = loadTexture ("AutoAsparagus/onion");
 			nofuelTexture = loadTexture ("AutoAsparagus/nofuel");
 			launchclampTexture = loadTexture ("AutoAsparagus/launchclamp");
@@ -163,6 +174,39 @@ namespace AutoAsparagus {
 			//strutTexture = loadTexture ("AutoAsparagus/strut");
 			sepratronTexture = loadTexture ("AutoAsparagus/sepratron");
 		}
+
+		public void setupAppButton() {
+			if (!setupApp) {
+				setupApp = true;
+				if (appButton == null) {
+
+					print ("AutoAsparagus: Setting up AppLauncher");
+					ApplicationLauncher appinstance = ApplicationLauncher.Instance;
+
+					print ("AutoAsparagus: Setting up AppLauncher Button");
+					appButton = appinstance.AddModApplication (appOnTrue, appOnFalse, doNothing, doNothing, doNothing, doNothing, ApplicationLauncher.AppScenes.VAB, appTexture);
+				}
+			}
+
+		}
+
+		public void doNothing() {
+		}
+
+		public void appOnTrue() {
+			if (researchedFuelLines()) {
+				visible = true;
+			} else {
+				osd("Fuel lines have not been researched yet!");
+				visible = false;
+			}
+
+		}
+
+		public void appOnFalse() {
+			visible = false;
+		}
+
 
 		internal static Rect clampToScreen(Rect rect) {
 			rect.width = Mathf.Clamp(rect.width, 0, Screen.width);
