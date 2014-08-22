@@ -1,5 +1,5 @@
-AutoAsparagus v0.4
-==================
+AutoAsparagus
+=============
 
 * AutoAsparagus mod for Kerbal Space Program
 
@@ -11,7 +11,7 @@ The plugin can create fuel lines if you have none, or it can use your existing f
 See http://wiki.kerbalspaceprogram.com/wiki/Tutorial:Asparagus_Staging
 
 * How do I install this mod?
-Same as any other mod, put the 'AutoAsparagus' and '000_Toolbar' folders in GameData.  See also http://wiki.kerbalspaceprogram.com/wiki/Addon#How_to_install_addons
+Same as any other mod, put the 'AutoAsparagus' folder in GameData.  See also http://wiki.kerbalspaceprogram.com/wiki/Addon#How_to_install_addons
 
 * More info
-See http://forum.kerbalspaceprogram.com/threads/61238-AutoAsparagus-v0-4 for more info
+See http://forum.kerbalspaceprogram.com/threads/61238 for more info
