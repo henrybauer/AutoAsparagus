@@ -345,8 +345,8 @@ namespace AutoAsparagus {
 
 			ShipConstruction.ShipConfig = shipCfg;
 			editor.ship.LoadShip(ShipConstruction.ShipConfig);
-			EditorLogic.startPod = editor.ship.parts[0].localRoot;
-			editor.SetHighlightRecursive(true, editor.ship);
+			//EditorLogic.startPod = editor.ship.parts[0].localRoot;
+			//editor.SetHighlightRecursive(true, editor.ship);
 			editor.SetBackup();
 			var resetCrewFn = editor.GetType().GetMethod("ResetCrewAssignment", BindingFlags.NonPublic | BindingFlags.Instance);
 			resetCrewFn.Invoke(editor, new object[] { ShipConstruction.ShipConfig }); // I'm sorry, Squad :/

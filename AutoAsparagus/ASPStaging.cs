@@ -128,7 +128,7 @@ namespace AutoAsparagus
 			List<Part> tanks = new List<Part>();
 			print ("=== Looking for symmetrical fuel tanks");
 			foreach (Part p in parts) {
-				if ((isFuelTank(p)) && (p.symmetryMode>0) && (!isFuelTank(p.parent))){
+				if ((isFuelTank(p)) && (p.symmetryCounterparts.Count>0) && (!isFuelTank(p.parent))){
 					ASPConsoleStuff.printPart ("Adding fuel tank", p);
 					tanks.Add (p);
 				}
@@ -174,7 +174,7 @@ namespace AutoAsparagus
 			List<Part> decouplers = new List<Part>();
 			foreach (Part p in parts) {
 				if (p.name.ToLower ().Contains ("decoupler")) {
-					if (p.symmetryMode > 0) {
+					if (p.symmetryCounterparts.Count > 0) {
 						decouplers.Add (p);
 					}
 				}
@@ -196,7 +196,7 @@ namespace AutoAsparagus
 					Staging.AddStageAt (p.inverseStage + 1);
 					p.inverseStage = p.inverseStage + 1;
 				}
-				int x = p.symmetryMode / 2;
+				int x = p.symmetryCounterparts.Count / 2;
 				while (x > 0) {
 					usedstages.Add (p.inverseStage);
 					x = x - 1;

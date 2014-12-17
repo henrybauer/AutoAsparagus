@@ -34,32 +34,33 @@ namespace AutoAsparagus
 		}
 	}
 
+		static public void dumpPartModule(PartModule pm) {
+			print ("pm: " + pm.moduleName);
+			print ("pm.enabled: "+pm.enabled.ToString()+"/"+pm.isEnabled);
+			print ("pm.gettype: " + pm.GetType ().ToString());
+			if (pm.moduleName == "CModuleFuelLine") {
+				print ("FUEL LINE!");
+				CompoundPart cp = (CompoundPart)pm.part;
+				printPart ("target: ", cp.target);
+
+
+			}
+
+		}
+
 		static public void dumpPart(Part p){
-			print ("==== "+p.name.ToString () + ": " + p.uid.ToString () + "/" + p.symmetryMode.ToString ()+"/"+p.children.Count.ToString()+"/"+p.attachMode.ToString()+"/"+p.highlightRecurse.ToString());
+			print ("==== "+p.name.ToString () + ": " + p.GetInstanceID().ToString () + "/" + p.symmetryCounterparts.Count.ToString ()+"/"+p.children.Count.ToString()+"/"+p.attachMode.ToString());
 			printTransform ("transform", p.transform);
 			//print ("  isAttached:" + p.isAttached.ToString () + "/isConnected:" + p.isConnected.ToString ());
 			foreach (AttachNode an in p.attachNodes) {
 				printAttachNode ("    ", an);
 			}
-			if (p is FuelLine) {
-				FuelLine f = (FuelLine)p;
 
-				print ("FuelLine: fueldir:" + f.flowDirection.ToString () + "/open:" + f.fuelLineOpen.ToString () + "/maxLength:" + f.maxLength.ToString ());
-				//printPart ("    fuelLookupTarget", f.fuelLookupTarget);
-				printPart ("    target", f.target);
-				print ("     dir:" + f.direction.ToString ("F8") + "/targetpos:" + f.targetPosition.ToString ("F8") + "/target");
-				/*printTransform ("startCap", f.startCap);
-				printTransform ("endCap", f.endCap);
-				printTransform ("line", f.line);
-				printTransform ("targetAnchor", f.targetAnchor);
-				printAttachNode ("srfAttachNode", f.srfAttachNode);
-				if (f.topNode != null) {
-					printAttachNode ("topNode", f.topNode);
-				}*/
-				printPart ("transform.parent part", (Part)f.transform.parent.gameObject);
-			}	
+			foreach (PartModule pm in p.Modules) {
+				dumpPartModule (pm);
+			}
 			foreach (Part child in p.children) {
-				print ("child: "+child.name.ToString () + ": " + child.uid.ToString () + "/" + child.symmetryMode.ToString ()+"/"+child.children.Count.ToString());
+				print ("child: "+child.name.ToString () + ": " + child.GetInstanceID().ToString () + "/" + child.symmetryCounterparts.Count.ToString ()+"/"+child.children.Count.ToString());
 			}
 		}
 
@@ -68,7 +69,7 @@ namespace AutoAsparagus
 			if (p==null){
 				print (header + ": null!");
 			} else {
-				print (header +": "+p.name.ToString () + ": " + p.uid.ToString () + "/" + p.symmetryMode.ToString ()+"/"+p.children.Count.ToString());
+				print (header +": "+p.name.ToString () + ": " + p.GetInstanceID().ToString () + "/" + p.symmetryCounterparts.Count.ToString ()+"/"+p.children.Count.ToString());
 			}
 		}
 

@@ -17,6 +17,8 @@ using UnityEngine;
 
 namespace AutoAsparagus
 {
+	// Be sure to target .NET 3.5 or you'll get some bogus error on startup!
+
 	[KSPAddon(KSPAddon.Startup.MainMenu, true)]
 	internal class ASPInstallChecker : MonoBehaviour
 	{

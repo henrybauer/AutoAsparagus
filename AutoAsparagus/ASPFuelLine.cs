@@ -11,18 +11,38 @@ namespace AutoAsparagus
 		private class FuelSet {
 			public Part fromPart { get; set; }
 			public Part toPart { get; set; }
-			public FuelLine fl { get; set; }
+			public CompoundPart fl { get; set; }
 		}
 
 		private static List<FuelSet> fuelSetsToConnect = new List<FuelSet>();
+
+		private static Boolean isFuelLine(Part p){
+			// is the passed part a fuel line?
+			if (p is FuelLine) {
+				return true;
+			}
+			if (p is CompoundPart) {
+				foreach (PartModule pm in p.Modules){
+					if (pm.moduleName == "CModuleFuelLine") {
+						return true;
+					}
+				}
+			}
+			return false;
+		}
 
 		public static List<Part> getFuelLineTargets(Part p){
 			ASPConsoleStuff.printPart ("...searching fuel lines of part", p);
 			List<Part> targets = new List<Part> ();
 			foreach (Part child in p.children) {
-				if (child is FuelLine) {
+				if (isFuelLine(child)) {
 					// FuelLine class has a "target" attribute; Part class doesn't, so we have to re-class to access ".target"
-					Part fuelLineTarget = ((FuelLine)child).target;
+					Part fuelLineTarget = null;
+					if (child is FuelLine){
+						fuelLineTarget = ((FuelLine)child).target;
+					} else {
+						fuelLineTarget = ((CompoundPart)child).target;
+					}
 					if (fuelLineTarget != null) {
 						ASPConsoleStuff.printPart ("...found fuel line target", fuelLineTarget);
 						targets.Add (fuelLineTarget);
@@ -162,11 +182,11 @@ namespace AutoAsparagus
 			// Make a new FuelLine object
 			AvailablePart ap = PartLoader.getPartInfoByName ("fuelLine");
 			UnityEngine.Object obj = UnityEngine.Object.Instantiate(ap.partPrefab);
-			FuelLine f = (FuelLine)obj;
+			CompoundPart f = (CompoundPart)obj;
 			f.gameObject.SetActive(true);
 			f.gameObject.name = "fuelLine";
 			f.partInfo = ap;
-			f.highlightRecurse = true;
+			//f.highlightRecurse = true;
 			f.attachMode = AttachModes.SRF_ATTACH;
 
 			print ("    set position in space");
@@ -405,7 +425,7 @@ namespace AutoAsparagus
 		private static bool hasFuelLine(Part p){
 			bool boolhasFuelLine = false;
 			foreach (Part child in p.children) {
-				if (child is FuelLine) {
+				if (isFuelLine(child)) {
 					boolhasFuelLine = true;
 				}
 			}
@@ -471,7 +491,7 @@ namespace AutoAsparagus
 			// 4-way symmetry will have (4-2)/2 = 1 for each side
 			// 2-way symmetry will have (2-2)/2 = 0 for each side (we will just connect the tanks to the central tank)
 
-			int numberOfTanks = (currentTank.symmetryMode + 1);
+			int numberOfTanks = (currentTank.symmetryCounterparts.Count + 1);
 			int tanksToDropAtOnce = 2;
 
 			int[] primes = new int[] {
@@ -490,7 +510,7 @@ namespace AutoAsparagus
 				}
 			}
 
-			int chainLength = ((currentTank.symmetryMode - 1) / tanksToDropAtOnce);
+		int chainLength = ((currentTank.symmetryCounterparts.Count - 1) / tanksToDropAtOnce);
 
 		print("Fuel line chain length: "+chainLength.ToString()+", dropping "+tanksToDropAtOnce.ToString()+" tanks at once (from "+numberOfTanks.ToString()+" tanks)");
 
@@ -624,10 +644,17 @@ namespace AutoAsparagus
 			List<Part> parts = ship.parts;
 
 			foreach (Part p in parts) {
-				if (p is FuelLine) {
-					FuelLine f = (FuelLine)p;
-					if (f.target == target) {
-						return true;
+				if (isFuelLine(p)) {
+					if (p is FuelLine){
+						FuelLine f = (FuelLine)p;
+						if (f.target == target) {
+							return true;
+						}
+					} else {
+						CompoundPart f = (CompoundPart)p;
+						if (f.target == target) {
+							return true;
+						}
 					}
 				}
 			}
@@ -687,7 +714,7 @@ namespace AutoAsparagus
 				Part p = tanks [0];
 				bool connectTank = true;
 				foreach (Part child in p.children) {
-					if (child is FuelLine) {
+					if (isFuelLine(child)) {
 						ASPConsoleStuff.printPart ("Tank already has a fuel line", p);
 						connectTank = false;
 					}
@@ -723,7 +750,7 @@ namespace AutoAsparagus
 			List<Part> parts = ship.parts;
 			List<Part> partsToDelete = new List<Part> ();
 			foreach (Part p in parts) {
-				if (p is FuelLine) {
+				if (isFuelLine(p)) {
 					ASPConsoleStuff.printPart ("Marking fuel line for death", p);
 					partsToDelete.Add (p);
 				}
