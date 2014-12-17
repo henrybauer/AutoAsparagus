@@ -1,6 +1,3 @@
-// this define is only for development, remove it for production.
-//#define KSPdev
-
 using System;
 using UnityEngine;
 using System.Collections;
@@ -426,7 +423,7 @@ namespace AutoAsparagus {
 
 
 
-#if KSPdev
+#if DEBUG
 
 			GUILayout.BeginHorizontal();
 			if (GUILayout.Button("DEV - Reload ship",buttonStyle)) {
@@ -466,7 +463,7 @@ namespace AutoAsparagus {
 
 
 // The block below is only for use during development.  It loads a quicksave game name "dev" and goes right into the editor.
-#if KSPdev
+#if DEBUG
 [KSPAddon(KSPAddon.Startup.MainMenu, false)]
 public class Debug_AutoLoadQuicksaveOnStartup: UnityEngine.MonoBehaviour
 {
