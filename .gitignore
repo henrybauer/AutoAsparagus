@@ -1,0 +1,6 @@
+*.dll
+*.mdb
+*.pidb
+AutoAsparagus/obj/*
+.DS_Store
+AutoAsparagus.userprefs
