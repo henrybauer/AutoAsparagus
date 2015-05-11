@@ -63,7 +63,7 @@ namespace AutoAsparagus
 			return false;
 		}*/
 
-		private static Part findRootPart(Part p){
+		public static Part findRootPart(Part p){
 			Part parent = p;
 			while (parent.parent != null) {
 				parent = parent.parent;
@@ -459,12 +459,19 @@ namespace AutoAsparagus
 			if (partToCheck == null) {
 				return null;
 			}
+			int safetyfactor = 10000;
 			while (partToCheck != null) {
+				safetyfactor = safetyfactor - 1;
+				if (safetyfactor == 0) {
+					AutoAsparagus.osd ("Infinite loop in findParentFuelTank(), aborting :(");
+					AutoAsparagus.mystate = AutoAsparagus.ASPState.IDLE;
+					return null;
+				}
 				partToCheck = partToCheck.parent;
 				if (partToCheck == null) {
 					return null;
 				}
-				if (ASPStaging.isFuelTank(partToCheck)) {
+				if (ASPStaging.isFuelTank (partToCheck)) {
 					return partToCheck;
 				}
 			}
@@ -703,14 +710,21 @@ namespace AutoAsparagus
 			List<Part> parts = ship.parts;
 
 			// start a new list of fuel lines to connect
-		//fuelSetsToConnect = new List<FuelSet>();
+			//fuelSetsToConnect = new List<FuelSet>();
 
 			// Find the symmetrical fuel tanks
 			List<Part> tanks = ASPStaging.findSymettricalFuelTanks (parts);
 			List<Part> tanksToConnect = new List<Part> ();
 
 			// get list of tanks to connect
+			int safetyfactor = 10000;
 			while (tanks.Count > 0) {
+				safetyfactor = safetyfactor - 1;
+				if (safetyfactor == 0) {
+					AutoAsparagus.osd ("Infinite loop in AddOnionFuelLines:tanks.Count, aborting :(");
+					AutoAsparagus.mystate = AutoAsparagus.ASPState.IDLE;
+					return;
+				}
 				Part p = tanks [0];
 				bool connectTank = true;
 				foreach (Part child in p.children) {
@@ -725,8 +739,14 @@ namespace AutoAsparagus
 				}
 				tanks.Remove (p);
 			}
-
+			safetyfactor = 10000;
 			while (tanksToConnect.Count > 0) {
+				safetyfactor = safetyfactor - 1;
+				if (safetyfactor == 0) {
+					AutoAsparagus.osd ("Infinite loop in AddOnionFuelLines:tankstoConnect.Count, aborting :(");
+					AutoAsparagus.mystate = AutoAsparagus.ASPState.IDLE;
+					return;
+				}
 				ASPConsoleStuff.printPartList ("Tanks to connect", "tank", tanksToConnect);
 
 				Part currentTank = tanksToConnect [0];
@@ -755,7 +775,14 @@ namespace AutoAsparagus
 					partsToDelete.Add (p);
 				}
 			}
+			int safetyfactor = 10000;
 			while (partsToDelete.Count > 0) {
+				safetyfactor = safetyfactor - 1;
+				if (safetyfactor == 0) {
+				AutoAsparagus.osd ("Infinite loop in DeleteAllFuelLines:partsToDelete.Count, aborting :(");
+					AutoAsparagus.mystate = AutoAsparagus.ASPState.IDLE;
+					return;
+				}
 				Part p = partsToDelete [0];
 				ASPConsoleStuff.printPart ("Deleting fuel line", p);
 				Part parent = p.parent;

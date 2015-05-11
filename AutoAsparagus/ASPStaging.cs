@@ -198,8 +198,8 @@ namespace AutoAsparagus
 				}
 				int x = p.symmetryCounterparts.Count / 2;
 				while (x > 0) {
-					usedstages.Add (p.inverseStage);
 					x = x - 1;
+					usedstages.Add (p.inverseStage);
 				}
 				decouplers.Remove (p);
 				foreach (Part brother in p.symmetryCounterparts) {
@@ -254,6 +254,12 @@ namespace AutoAsparagus
 
 				// First, follow the fuel lines
 				while (p != null) {
+					safetyfactor = safetyfactor - 1;
+					if (safetyfactor == 0) {
+						AutoAsparagus.osd ("Infinite loop in AsaparagusTheShip:tanksToStage.Count:p!=null, aborting :(");
+						AutoAsparagus.mystate = AutoAsparagus.ASPState.IDLE;
+						return;
+					}
 					ASPConsoleStuff.printPart ("Adding to chain at position " + chain.Count, p);
 					chain.Add (p);
 
