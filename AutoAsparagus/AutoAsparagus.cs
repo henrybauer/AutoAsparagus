@@ -1,6 +1,7 @@
 using System;
 using UnityEngine;
 using System.Collections;
+using System.Linq;
 using System.Collections.Generic;
 using System.Reflection;
 //using Toolbar;
@@ -24,7 +25,7 @@ namespace AutoAsparagus {
 		private float minwidth = 1;
 		private float minheight = 1;
 
-		public enum ASPState { IDLE, ADDASP, ADDONION, CONNECT, AFTERCONNECT, ADDSTAGES, STAGE, RELOAD, DELETEFUEL, AFTERSTAGE, CLAMPS };
+		public enum ASPState { IDLE, ADDASP, ADDONION, CONNECT, AFTERCONNECT, ADDSTAGES, STAGE, RELOAD, DELETEFUEL, AFTERDELETEFUEL, AFTERSTAGE, CLAMPS, SMARTSTAGE };
 		public static ASPState mystate = ASPState.IDLE;
 		private int refreshwait = 0;
 
@@ -36,6 +37,7 @@ namespace AutoAsparagus {
 		private static Texture2D parachuteTexture = null;
 		private static Texture2D launchclampTexture = null;
 		private static Texture2D sepratronTexture = null;
+		private static Texture2D smartstageTexture = null;
 
 		public static bool stageParachutes = false;
 		public static bool stageLaunchClamps = false;
@@ -43,6 +45,9 @@ namespace AutoAsparagus {
 		public static int launchClampsStage = 0;
 		public static bool addStruts = false;
 		public static bool stagesepratrons = true;
+		public static bool SmartStageAvailable = false;
+		public static bool useSmartStage = false;
+		private MethodInfo computeStagesMethod = null;
 
 		private GUIStyle tooltipstyle = null;
 		private GUIStyle buttonStyle = null;
@@ -156,31 +161,48 @@ namespace AutoAsparagus {
 		// Called after the scene is loaded.
 		public void Awake() {
 			//RenderingManager.AddToPostDrawQueue(0, OnDraw);
-			print ("AutoAsparagus: hooking OnGUIAppLauncherReady");
-			GameEvents.onGUIApplicationLauncherReady.Add(setupAppButton);
+			print ("AutoAsparagus: Awake()");
+			//GameEvents.onGUIApplicationLauncherReady.Add(setupAppButton);
+			setupAppButton ();
 		}
 
 		// Called after Awake()
 		public void Start() {
 			aspTexture = loadTexture ("AutoAsparagus/asparagus");
-			appTexture = loadTexture ("AutoAsparagus/asparagus-app");
 			onionTexture = loadTexture ("AutoAsparagus/onion");
 			nofuelTexture = loadTexture ("AutoAsparagus/nofuel");
 			launchclampTexture = loadTexture ("AutoAsparagus/launchclamp");
 			parachuteTexture = loadTexture ("AutoAsparagus/parachute");
 			//strutTexture = loadTexture ("AutoAsparagus/strut");
 			sepratronTexture = loadTexture ("AutoAsparagus/sepratron");
+
+			AssemblyLoader.LoadedAssembly SmartStage = AssemblyLoader.loadedAssemblies.SingleOrDefault(a => a.dllName == "SmartStage");
+			if (SmartStage != null)
+			{
+				print ("AutoAsparagus: found SmartStage");
+				try
+				{
+					computeStagesMethod = SmartStage.assembly.GetTypes().SingleOrDefault(t => t.Name == "SmartStage").GetMethod("computeStages");
+				}
+				catch (Exception e)
+				{
+					UnityEngine.Debug.LogError("Error finding the method definition\n" + e.StackTrace);
+				}
+				smartstageTexture = loadTexture ("SmartStage/SmartStage38");
+				SmartStageAvailable = true;
+				useSmartStage = true;
+			}
 		}
 
 		public void setupAppButton() {
-			if (!setupApp) {
+			if (!setupApp && ApplicationLauncher.Ready) {
 				setupApp = true;
 				if (appButton == null) {
 
 					print ("AutoAsparagus: Setting up AppLauncher");
 					ApplicationLauncher appinstance = ApplicationLauncher.Instance;
-
 					print ("AutoAsparagus: Setting up AppLauncher Button");
+					appTexture = loadTexture ("AutoAsparagus/asparagus-app");
 					appButton = appinstance.AddModApplication (appOnTrue, appOnFalse, doNothing, doNothing, doNothing, doNothing, ApplicationLauncher.AppScenes.VAB, appTexture);
 				}
 			}
@@ -283,10 +305,16 @@ namespace AutoAsparagus {
 						mystate = ASPState.AFTERCONNECT;
 						break;
 					case ASPState.AFTERCONNECT:
-						ReloadShip ();
-						mystate = ASPState.ADDSTAGES;
-						osd ("Adding empty stages...");
+						newReloadShip ();
 						refreshwait = 100;
+						if (useSmartStage) {
+							mystate = ASPState.SMARTSTAGE;
+							osd ("Calling SmartStage...");
+							print ("AutoAsparagus: Calling SmartStage");
+						} else {
+							mystate = ASPState.ADDSTAGES;
+							osd ("Adding empty stages...");
+						}
 						break;
 					case ASPState.ADDSTAGES:
 						ASPStaging.AddEmptyStages();
@@ -310,12 +338,17 @@ namespace AutoAsparagus {
 						break;
 					case ASPState.DELETEFUEL:
 						ASPFuelLine.DeleteAllFuelLines ();
-						ReloadShip ();
+						newReloadShip ();
 						osd ("Fuel lines deleted.");
 						mystate = ASPState.IDLE;
 						break;
+					case ASPState.AFTERDELETEFUEL:
+						newReloadShip ();
+						mystate = ASPState.IDLE;
+						osd ("Done!");
+						break;
 					case ASPState.AFTERSTAGE:
-						ReloadShip ();
+						newReloadShip ();
 						if (stageLaunchClamps) {
 							osd ("Staging launch clamps...");
 							mystate = ASPState.CLAMPS;
@@ -323,6 +356,15 @@ namespace AutoAsparagus {
 						} else {
 							osd ("Done!");
 							mystate = ASPState.IDLE;
+						}
+						break;
+					case ASPState.SMARTSTAGE:
+						osd ("Invoking SmartStage...");
+						mystate = ASPState.IDLE;
+						try {
+							computeStagesMethod.Invoke (null, new object[] { });
+						} catch (Exception e) {
+							UnityEngine.Debug.LogError ("Error invoking method\n" + e.StackTrace);
 						}
 						break;
 					}
@@ -358,6 +400,21 @@ namespace AutoAsparagus {
 			StartCoroutine (reallyReloadShip(editor));
 		}
 
+		private void newReloadShip(){
+			print ("newReloadShip() starting...");
+			EditorLogic editor = EditorLogic.fetch;
+			ConfigNode shipCfg = editor.ship.SaveShip ();
+
+			editor.ship.Parts.ForEach (p => UnityEngine.Object.Destroy (p.gameObject));
+			editor.ship.Clear ();
+
+			ShipConstruction.ShipConfig = shipCfg;
+			editor.ship.LoadShip (ShipConstruction.ShipConfig);
+			Staging.SortIcons ();
+			editor.SetBackup ();
+			print ("newReloadShip() done!");
+		}
+
 		// called every screen refresh
 		private void OnWindow(int windowID){
 
@@ -383,13 +440,19 @@ namespace AutoAsparagus {
 			GUILayout.Label ("Options:");
 			GUILayout.EndHorizontal();
 
-			GUILayout.BeginHorizontal();
-			stageParachutes = GUILayout.Toggle (stageParachutes, new GUIContent(" Stage parachutes", parachuteTexture, "Stage parachutes to fire with decouplers"), togglestyle);
-			GUILayout.EndHorizontal();
+			if (SmartStageAvailable) {
+				GUILayout.BeginHorizontal();
+				useSmartStage = GUILayout.Toggle (useSmartStage, new GUIContent(" Use SmartStage", smartstageTexture, "Stage the ship using SmartStage instead of AutoAsparagus"), togglestyle);
+				GUILayout.EndHorizontal();
+			}
+			if (!useSmartStage) {
+				GUILayout.BeginHorizontal ();
+				stageParachutes = GUILayout.Toggle (stageParachutes, new GUIContent (" Stage parachutes", parachuteTexture, "Stage parachutes to fire with decouplers"), togglestyle);
+				GUILayout.EndHorizontal ();
 
-			GUILayout.BeginHorizontal();
-			stagesepratrons = GUILayout.Toggle (stagesepratrons, new GUIContent(" Stage sepratrons", sepratronTexture, "Stage sepratrons to fire with decouplers"), togglestyle);
-			GUILayout.EndHorizontal();
+				GUILayout.BeginHorizontal ();
+				stagesepratrons = GUILayout.Toggle (stagesepratrons, new GUIContent (" Stage sepratrons", sepratronTexture, "Stage sepratrons to fire with decouplers"), togglestyle);
+				GUILayout.EndHorizontal ();
 
 			/* not yet, but soon!
 			GUILayout.BeginHorizontal();
@@ -397,30 +460,30 @@ namespace AutoAsparagus {
 			GUILayout.EndHorizontal();
 			*/
 
-			if (!stageLaunchClamps) {
-				minheight = windowRect.height;
-				minwidth = windowRect.width;
-			}
-
-			bool oldclamps = stageLaunchClamps;
-			GUILayout.BeginHorizontal();
-			stageLaunchClamps= GUILayout.Toggle (stageLaunchClamps, new GUIContent(" Stage launch clamps", launchclampTexture, "Move launch clamps to the bottom or next-to-bottom stage"), togglestyle);
-			GUILayout.EndHorizontal();
-			if (stageLaunchClamps != oldclamps) {
 				if (!stageLaunchClamps) {
-					// shrink window to old dimesions
-					windowRect.height = minheight;
-					windowRect.width = minwidth;
+					minheight = windowRect.height;
+					minwidth = windowRect.width;
+				}
+
+				bool oldclamps = stageLaunchClamps;
+				GUILayout.BeginHorizontal ();
+				stageLaunchClamps = GUILayout.Toggle (stageLaunchClamps, new GUIContent (" Stage launch clamps", launchclampTexture, "Move launch clamps to the bottom or next-to-bottom stage"), togglestyle);
+				GUILayout.EndHorizontal ();
+				if (stageLaunchClamps != oldclamps) {
+					if (!stageLaunchClamps) {
+						// shrink window to old dimesions
+						windowRect.height = minheight;
+						windowRect.width = minwidth;
+					}
+				}
+
+				if (stageLaunchClamps) {
+					GUILayout.BeginHorizontal ();
+					//GUILayout.Label ("Launch clamps:");
+					launchClampsStage = GUILayout.SelectionGrid (launchClampsStage, launchClampsText, 1, togglestyle);
+					GUILayout.EndHorizontal ();
 				}
 			}
-
-			if (stageLaunchClamps) {
-				GUILayout.BeginHorizontal();
-				//GUILayout.Label ("Launch clamps:");
-				launchClampsStage=GUILayout.SelectionGrid(launchClampsStage,launchClampsText,1, togglestyle);
-				GUILayout.EndHorizontal();
-			}
-
 
 
 #if DEBUG
