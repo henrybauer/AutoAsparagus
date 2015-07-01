@@ -25,7 +25,7 @@ namespace AutoAsparagus {
 		private float minwidth = 1;
 		private float minheight = 1;
 
-		public enum ASPState { IDLE, ADDASP, ADDONION, CONNECT, AFTERCONNECT, ADDSTAGES, STAGE, RELOAD, DELETEFUEL, AFTERDELETEFUEL, AFTERSTAGE, CLAMPS, SMARTSTAGE };
+		public enum ASPState { IDLE, ADDASP, ADDONION, CONNECT, AFTERCONNECT, ADDSTAGES, STAGE, RELOAD, DELETEFUEL, FINALREFRESH, AFTERSTAGE, CLAMPS, SMARTSTAGE };
 		public static ASPState mystate = ASPState.IDLE;
 		private int refreshwait = 0;
 
@@ -332,9 +332,9 @@ namespace AutoAsparagus {
 						break;
 					case ASPState.CLAMPS:
 						if (stageLaunchClamps) {
-							ASPStaging.StageLaunchClamps ();
+							ASPStaging.StageLaunchClamps (launchClampsStage);
 						}
-						mystate = ASPState.IDLE;
+						mystate = ASPState.FINALREFRESH;
 						osd ("Done!");
 						refreshwait = 10;
 						break;
@@ -345,7 +345,7 @@ namespace AutoAsparagus {
 						osd ("Fuel lines deleted.");
 						mystate = ASPState.IDLE;
 						break;
-					case ASPState.AFTERDELETEFUEL:
+					case ASPState.FINALREFRESH:
 						newReloadShip ();
 						mystate = ASPState.IDLE;
 						osd ("Done!");

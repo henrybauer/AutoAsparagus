@@ -62,20 +62,20 @@ namespace AutoAsparagus
 			}
 		}
 
-		static public void StageLaunchClamps() {
+		static public void StageLaunchClamps(int launchClampsStage) {
 			var editor = EditorLogic.fetch;
 
 			// Get all the parts of the ship
 			var parts = editor.ship.parts;
 
 			int stage = Staging.StageCount - 1;
-			if (AutoAsparagus.launchClampsStage == 1) {
+			if (launchClampsStage == 1) {
 				stage = stage - 1;
 			}
 
 			foreach (Part p in parts) {
 				if (p.name.ToLower ().Contains ("launchclamp")) {
-					ASPConsoleStuff.printPart ("Putting launch clamp into stage " + stage.ToString (), p);
+					ASPConsoleStuff.printPart ("Putting launch clamp into stage " + stage.ToString ()+", launchClampsStage ="+launchClampsStage.ToString(), p);
 					p.inverseStage = stage;
 				}
 			}
