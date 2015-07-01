@@ -15,7 +15,6 @@ Global
 		{BD117790-2F92-410B-9437-018C17220308}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(MonoDevelopProperties) = preSolution
-		StartupItem = AutoAsparagus\AutoAsparagus.csproj
-		version = 0.7
+		version = 0.10
 	EndGlobalSection
 EndGlobal
