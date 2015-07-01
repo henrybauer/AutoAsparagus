@@ -85,8 +85,8 @@ namespace AutoAsparagus
 				return true;
 			}
 			if (p.collider == null) {
-				ASPConsoleStuff.AAprint ("fireRayAt.p.collider is null!");
-				ASPConsoleStuff.printPart ("Bad part with no collider", p);
+				//ASPConsoleStuff.AAprint ("fireRayAt.p.collider is null!");
+				//ASPConsoleStuff.printPart ("Part has no collider", p);
 				collisionpoint = origin; // must be set to something
 				return false;
 			}
@@ -160,7 +160,7 @@ namespace AutoAsparagus
 			ASPConsoleStuff.printVector3 ("testing midway", midway);
 			Vector3 collisionpoint = new Vector3 ();
 			foreach (Part p in parts) {
-				if ((p==sourceTank) || (p==destTank)){
+				if ((p==destTank) || (p==destTank)){
 					continue;
 				}
 				if (fireRayAt (p, startPosition, destPosition, out collisionpoint)) {
@@ -168,6 +168,45 @@ namespace AutoAsparagus
 					return true;
 				}
 
+			}
+
+			List<Vector3> barrelStart = new List<Vector3>();
+			List<Vector3> barrelDest = new List<Vector3>();
+
+			const float barrelWidth = 0.1f;  // magic
+
+			//barrelStart.Add (new Vector3 (startPosition.x-barrelWidth, startPosition.y, startPosition.z));
+
+			Vector3 barrelEdgePointStart = new Vector3();
+			Vector3 barrelEdgePointDest = new Vector3();
+
+			foreach (float yinc in new float[] {0f, barrelWidth, -barrelWidth} ) {
+				barrelEdgePointStart.y = startPosition.y + yinc;
+				barrelEdgePointDest.y = destPosition.y + yinc;
+				foreach (float xinc in new float[] {0f, barrelWidth, -barrelWidth} ) {
+					barrelEdgePointStart.x = startPosition.x + xinc;
+					barrelEdgePointDest.x = destPosition.x + xinc;
+					foreach (float zinc in new float[] {0f, barrelWidth, -barrelWidth} ) {
+						barrelEdgePointStart.z = startPosition.z + zinc;
+						barrelStart.Add (barrelEdgePointStart);
+						barrelEdgePointDest.z = destPosition.z + zinc;
+						barrelDest.Add (barrelEdgePointDest);
+					}
+				}
+			}
+
+			foreach (Part p in parts) {
+				if ((p==sourceTank) || (p==destTank)){
+					continue;
+				}
+				foreach (Vector3 barrelStartPos in barrelStart) {
+					foreach (Vector3 barrelDestPos in barrelDest) {
+						if (fireRayAt (p, barrelStartPos, barrelDestPos, out collisionpoint)) {
+							ASPConsoleStuff.printPart ("**** fuel line barrel is obstructed at "+collisionpoint.ToString("F2")+" by", p);
+							return true;
+						}
+					}
+				}
 			}
 
 			/*Ray r = new Ray ();	
@@ -256,13 +295,13 @@ namespace AutoAsparagus
 			ASPConsoleStuff.AAprint ("    dist: " + (Vector3.Distance (destTank.transform.position, midway)).ToString ("F2"));
 			ASPConsoleStuff.printVector3 ("midway", midway);
 
-			float adjustmentincrement = 0.5f; // how much to move the midpoint
-			float adjustment=0.0f;
+			float adjustmentincrement = 0.2f; // how much to move the midpoint
+			float adjustment=0.2f;
 			bool flcollide = isFLpathObstructed (sourceTank, destTank, midway);
-			while ((flcollide) && (adjustment<3)) {
+			while ((flcollide) && (adjustment<100f)) {
 				Vector3 newmidway = new Vector3 (midway.x, midway.y, midway.z);
 				adjustment = adjustment + adjustmentincrement;
-				adjustmentincrement = adjustmentincrement * 2f;
+				//adjustmentincrement = adjustmentincrement * 2f;
 
 				/*
 				f.transform.position = midway;
@@ -290,13 +329,13 @@ namespace AutoAsparagus
 						midway = newmidway;
 				}*/
 
-
-				foreach (float yinc in new float[] {0f, adjustmentincrement, -adjustmentincrement}) {
+				foreach (float yinc in new float[] {0f, adjustment, -adjustment}) {
 					newmidway.y = midway.y + yinc;
-					foreach (float xinc in new float[] {0f, adjustmentincrement, -adjustmentincrement}) {
+					foreach (float xinc in new float[] {0f, adjustment, -adjustment}) {
 						newmidway.x = midway.x + xinc;
-						foreach (float zinc in new float[] {0f, adjustmentincrement, -adjustmentincrement}) {
+						foreach (float zinc in new float[] {0f, adjustment, -adjustment}) {
 							newmidway.z = midway.z + zinc;
+							ASPConsoleStuff.AAprint ("Testing adjustment of " + adjustment.ToString () + ", increment " + adjustmentincrement.ToString ());
 							flcollide = isFLpathObstructed (sourceTank, destTank, newmidway);
 							if (!flcollide) {
 								midway = newmidway;
@@ -376,6 +415,12 @@ namespace AutoAsparagus
 						midway = newmidway;
 					}
 			}*/
+			}
+			if (adjustment >= 3) {
+				AutoAsparagus.osd ("Failed to find unobstructed path for fuel line!");
+				ASPConsoleStuff.printPart ("Failed to find unobstructed path between", sourceTank);
+				ASPConsoleStuff.printPart ("... and", destTank);
+				AutoAsparagus.mystate = AutoAsparagus.ASPState.IDLE;
 			}
 			ASPConsoleStuff.printVector3 ("New midway is", midway);
 			getStartDestPositions (sourceTank, destTank, midway, out startPosition, out destPosition);
