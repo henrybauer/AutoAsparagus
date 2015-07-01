@@ -88,7 +88,7 @@ namespace AutoAsparagus
 				ASPConsoleStuff.AAprint ("fireRayAt.p.collider is null!");
 				ASPConsoleStuff.printPart ("Bad part with no collider", p);
 				collisionpoint = origin; // must be set to something
-				return true;
+				return false;
 			}
 			/* Can't be null
 			if (origin == null) {
