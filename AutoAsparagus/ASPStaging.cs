@@ -83,42 +83,32 @@ namespace AutoAsparagus
 		}
 
 		static public bool isFuelTank(Part p){
-			    /* Sample names:
-				 * fuelTank3
-				 * cl_radial_cylTankFuel
-				 * cl_radial_cylTankOxy
-                 * KW2Sidetank
-                 * KW1mtankL1
-                 * KW1mtankPancake
-                 * RCSTank1
-                 */
-			if ((p!=null) && (p.name != null)) {
-				if ((p.name.ToLower ().Contains ("tank")) || (p.name.ToLower ().Contains ("fuselage"))) {
-					// Check if this actually has any resources besides MonoPropellant
-					// Mod packs have LiquidFuel-only and Oxydizer-only tanks, and Kethane tanks have Kethane,
-					//   so rather than check for the existence of a predefined list of fuels, just check
-					//   that this is not a MonoPropellant-only tank.
-					PartResourceList rl = p.Resources;
-					if (rl == null) {
-						ASPConsoleStuff.printPart ("isFuelTank: Part is NOT a fuel tank, no resources", p);
-						return false;
-					}
-					if (rl.Count == 0) {
-						ASPConsoleStuff.printPart ("isFuelTank: Part is NOT a fuel tank, no resources", p);
-						return false;
-					}
-					foreach (PartResource pr in rl.list) {
-						ASPConsoleStuff.AAprint ("isFuelTank: resource name: " + pr.resourceName);
-						if (pr.resourceName.ToLower () != "monopropellant") {
-							ASPConsoleStuff.printPart ("isFuelTank: Part IS a fuel tank", p);
-							return true;
-						}
-					}
-					ASPConsoleStuff.printPart ("isFuelTank: Part is NOT a fuel tank, because it's a monopropellant tank", p);
-					return false;
+			if (p == null) {
+				ASPConsoleStuff.AAprint ("isFuelTank.p is null!");
+				return false;
+			}
+
+			PartResourceList rl = p.Resources;
+			if (rl == null) {
+				ASPConsoleStuff.printPart ("isFuelTank: Part is NOT a fuel tank, no resources", p);
+				return false;
+			}
+
+			if (rl.Count == 0) {
+				ASPConsoleStuff.printPart ("isFuelTank: Part is NOT a fuel tank, no resources", p);
+				return false;
+			}
+
+			// Check if this part has any resource that would actually flow through a fuel line
+			PartResourceDefinition resource;
+			foreach (PartResource pr in rl.list) {
+				ASPConsoleStuff.printPart ("isFuelTank: part has resource named: " + pr.resourceName,p);
+				resource = PartResourceLibrary.Instance.GetDefinition (pr.resourceName);
+				if (resource.resourceFlowMode == ResourceFlowMode.STACK_PRIORITY_SEARCH) {
+					ASPConsoleStuff.printPart ("isFuelTank: Part IS a fuel tank, has flowable resource: " + pr.resourceName, p);
+					return true;
 				} else {
-					ASPConsoleStuff.printPart ("isFuelTank: Part is NOT a fuel tank, based on name", p);
-					return false;
+					ASPConsoleStuff.printPart ("isFuelTank: resource is not flowable: " + resource.resourceFlowMode.ToString(), p);
 				}
 			}
 			return false;
