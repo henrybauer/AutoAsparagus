@@ -175,7 +175,7 @@ namespace AutoAsparagus
 
 
 		public static void AttachFuelLine(Part sourceTank, Part destTank){
-			print ("=== AttachFuelLine ===");
+			ASPConsoleStuff.AAprint ("=== AttachFuelLine ===");
 			ASPConsoleStuff.printPart ("sourceTank", sourceTank);
 			ASPConsoleStuff.printPart ("destTank", destTank);
 
@@ -189,7 +189,7 @@ namespace AutoAsparagus
 			//f.highlightRecurse = true;
 			f.attachMode = AttachModes.SRF_ATTACH;
 
-			print ("    set position in space");
+			ASPConsoleStuff.AAprint ("    set position in space");
 			// set position in space, relative to source tank
 			f.transform.localScale = sourceTank.transform.localScale;
 			f.transform.parent = sourceTank.transform; // must be BEFORE localposition!
@@ -202,9 +202,9 @@ namespace AutoAsparagus
 			Vector3 destPosition = new Vector3 ();
 
 			ASPConsoleStuff.printVector3 ("sourceTank", sourceTank.transform.position);
-			print ("    dist: " + (Vector3.Distance (sourceTank.transform.position, midway)).ToString ("F2"));
+			ASPConsoleStuff.AAprint ("    dist: " + (Vector3.Distance (sourceTank.transform.position, midway)).ToString ("F2"));
 			ASPConsoleStuff.printVector3 ("destTank", destTank.transform.position);
-			print ("    dist: " + (Vector3.Distance (destTank.transform.position, midway)).ToString ("F2"));
+			ASPConsoleStuff.AAprint ("    dist: " + (Vector3.Distance (destTank.transform.position, midway)).ToString ("F2"));
 			ASPConsoleStuff.printVector3 ("midway", midway);
 
 			float adjustmentincrement = 0.5f; // how much to move the midpoint
@@ -346,7 +346,7 @@ namespace AutoAsparagus
 			f.transform.LookAt (destTank.transform);
 			f.transform.Rotate (0, 90, 0);  // need to correct results from LookAt... dunno why.
 
-			print ("    attach to source tank");
+			ASPConsoleStuff.AAprint ("    attach to source tank");
 			// attach to source tank
 			AttachNode an = new AttachNode ();
 			an.id = "srfAttach";
@@ -361,10 +361,10 @@ namespace AutoAsparagus
 			// attach to destination tank
 			f.target = destTank;
 
-			print ("    targetposition");
+			ASPConsoleStuff.AAprint ("    targetposition");
 			f.targetPosition = destPosition;
 
-			print ("    direction");
+			ASPConsoleStuff.AAprint ("    direction");
 			//f.direction=(f.transform.position - destTank.transform.position).normalized;
 			//f.direction = f.transform.localRotation * f.transform.localPosition;  // only works if destTank is parent
 			//f.direction = (f.transform.InverseTransformPoint(destTank.transform.position) - f.transform.localPosition).normalized;  // works but crooked
@@ -393,7 +393,7 @@ namespace AutoAsparagus
 
 
 			// add to ship
-			print ("    adding to ship");
+			ASPConsoleStuff.AAprint ("    adding to ship");
 			sourceTank.addChild (f);
 
 			EditorLogic.fetch.ship.Add (f);
@@ -403,12 +403,11 @@ namespace AutoAsparagus
 			fs.toPart = destTank;
 			fs.fl = f;
 			fuelSetsToConnect.Add (fs);
-		print ("    added to fuelSetsToConnect, total: "+fuelSetsToConnect.Count.ToString());
-
+			ASPConsoleStuff.AAprint ("    added to fuelSetsToConnect, total: "+fuelSetsToConnect.Count.ToString());
 		}
 
 		public static void connectFuelLines() {
-			print("=== Connecting "+fuelSetsToConnect.Count.ToString()+" fuel sets");
+			ASPConsoleStuff.AAprint("=== Connecting "+fuelSetsToConnect.Count.ToString()+" fuel sets");
 			foreach (FuelSet fs in fuelSetsToConnect) {
 				ASPConsoleStuff.printPart ("Connecting FuelLine", fs.fl);
 				fs.fl.target = fs.toPart;
@@ -519,7 +518,7 @@ namespace AutoAsparagus
 
 		int chainLength = ((currentTank.symmetryCounterparts.Count - 1) / tanksToDropAtOnce);
 
-		print("Fuel line chain length: "+chainLength.ToString()+", dropping "+tanksToDropAtOnce.ToString()+" tanks at once (from "+numberOfTanks.ToString()+" tanks)");
+		ASPConsoleStuff.AAprint("Fuel line chain length: "+chainLength.ToString()+", dropping "+tanksToDropAtOnce.ToString()+" tanks at once (from "+numberOfTanks.ToString()+" tanks)");
 
 			// Now connect chainLength number of tanks to the first part
 			int currentChainLength = chainLength;
@@ -587,7 +586,7 @@ namespace AutoAsparagus
 		}
 
 		public static void AddFuelLines() {
-			print ("=== AddFuelLines ===");
+			ASPConsoleStuff.AAprint ("=== AddFuelLines ===");
 			// Get all the parts of the ship
 			EditorLogic editor = EditorLogic.fetch;
 			ShipConstruct ship = editor.ship;
@@ -674,9 +673,9 @@ namespace AutoAsparagus
 			foreach (Part p in rootPart.children) {
 				ASPConsoleStuff.printPart ("considering for start of chain", p);
 				if (tanksToConnect.Contains(p)){
-					print ("... is in tanksToConnect");
+					ASPConsoleStuff.AAprint ("... is in tanksToConnect");
 					if ((!hasFuelLine (p)) && (!isTargetofFuelLine(p))) {
-						print ("... no fuel lines");
+						ASPConsoleStuff.AAprint ("... no fuel lines");
 						Part parentTank = findParentFuelTank (p);
 					/*
 						if ((hasFuelLine (parentTank)) && (!isTargetofFuelLine(parentTank))) {
@@ -703,7 +702,7 @@ namespace AutoAsparagus
 		}
 
 		public static void AddOnionFuelLines() {
-			print ("=== AddOnionFuelLines ===");
+			ASPConsoleStuff.AAprint ("=== AddOnionFuelLines ===");
 			// Get all the parts of the ship
 			EditorLogic editor = EditorLogic.fetch;
 			ShipConstruct ship = editor.ship;
@@ -793,4 +792,3 @@ namespace AutoAsparagus
 		}
 	}
 }
-

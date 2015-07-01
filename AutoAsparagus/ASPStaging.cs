@@ -32,8 +32,8 @@ namespace AutoAsparagus
 				}
 			}
 
-			print ("..lowest stage is "+lowestStage.ToString()+"/"+Staging.StageCount.ToString());
-			print ("..adding " + (chain.Count - 1).ToString() + " stages");
+			ASPConsoleStuff.AAprint ("..lowest stage is "+lowestStage.ToString()+"/"+Staging.StageCount.ToString());
+			ASPConsoleStuff.AAprint ("..adding " + (chain.Count - 1).ToString() + " stages");
 
 			int stage = lowestStage + chain.Count - 1;
 			int partNumber = 0;
@@ -54,7 +54,7 @@ namespace AutoAsparagus
 					chain [partNumber].inverseStage = stage;
 					stageChildren(chain[partNumber],stage);
 				} else {
-					print ("..parent is not a decoupler, ignoring!");
+					ASPConsoleStuff.AAprint ("..parent is not a decoupler, ignoring!");
 				}
 
 				stage = stage - 1;
@@ -108,7 +108,7 @@ namespace AutoAsparagus
 						return false;
 					}
 					foreach (PartResource pr in rl.list) {
-						print ("isFuelTank: resource name: " + pr.resourceName);
+						ASPConsoleStuff.AAprint ("isFuelTank: resource name: " + pr.resourceName);
 						if (pr.resourceName.ToLower () != "monopropellant") {
 							ASPConsoleStuff.printPart ("isFuelTank: Part IS a fuel tank", p);
 							return true;
@@ -126,7 +126,7 @@ namespace AutoAsparagus
 
 		static public List<Part> findSymettricalFuelTanks(List<Part> parts) {
 			List<Part> tanks = new List<Part>();
-			print ("=== Looking for symmetrical fuel tanks");
+			ASPConsoleStuff.AAprint ("=== Looking for symmetrical fuel tanks");
 			foreach (Part p in parts) {
 				if ((isFuelTank(p)) && (p.symmetryCounterparts.Count>0) && (!isFuelTank(p.parent))){
 					ASPConsoleStuff.printPart ("Adding fuel tank", p);
@@ -223,7 +223,7 @@ namespace AutoAsparagus
 			// Find the symmetrical fuel tanks
 			List<Part> tanks = findSymettricalFuelTanks (parts);
 		
-			print("=== Tanks ===");
+			ASPConsoleStuff.AAprint("=== Tanks ===");
 
 			// print out a list of tanks, partners, and children
 			foreach (Part p in tanks) {

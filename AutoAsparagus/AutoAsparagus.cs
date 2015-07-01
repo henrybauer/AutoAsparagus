@@ -67,22 +67,22 @@ namespace AutoAsparagus {
 		private Boolean setupApp = false;
 
 		private static Texture2D loadTexture(string path) {
-			print ("=== AutoAsparagus loading texture: " + path);
+			ASPConsoleStuff.AAprint ("loading texture: " + path);
 			return GameDatabase.Instance.GetTexture(path, false);
 		}
 
 		private static bool researchedFuelLines(){
 			if (ResearchAndDevelopment.Instance == null) {
-				print ("no ResearchAndDevelopment.Instance, must be sandbox mode");
+				ASPConsoleStuff.AAprint ("no ResearchAndDevelopment.Instance, must be sandbox mode");
 				return true;
 			}
 			AvailablePart ap = PartLoader.getPartInfoByName ("fuelLine");
 			if (ap == null) {
-				print ("no fuelLine AvailablePart()");
+				ASPConsoleStuff.AAprint ("no fuelLine AvailablePart()");
 				return false;
 			}
 
-			print ("checking PartTechAvailable");
+			ASPConsoleStuff.AAprint ("checking PartTechAvailable");
 			return (ResearchAndDevelopment.PartTechAvailable(ap));
 
 		}
@@ -161,7 +161,7 @@ namespace AutoAsparagus {
 		// Called after the scene is loaded.
 		public void Awake() {
 			//RenderingManager.AddToPostDrawQueue(0, OnDraw);
-			print ("AutoAsparagus: Awake()");
+			ASPConsoleStuff.AAprint ("Awake()");
 			//GameEvents.onGUIApplicationLauncherReady.Add(setupAppButton);
 			setupAppButton ();
 		}
@@ -179,7 +179,7 @@ namespace AutoAsparagus {
 			AssemblyLoader.LoadedAssembly SmartStage = AssemblyLoader.loadedAssemblies.SingleOrDefault(a => a.dllName == "SmartStage");
 			if (SmartStage != null)
 			{
-				print ("AutoAsparagus: found SmartStage");
+				ASPConsoleStuff.AAprint ("found SmartStage");
 				try
 				{
 					computeStagesMethod = SmartStage.assembly.GetTypes().SingleOrDefault(t => t.Name == "SmartStage").GetMethod("computeStages");
@@ -199,9 +199,9 @@ namespace AutoAsparagus {
 				setupApp = true;
 				if (appButton == null) {
 
-					print ("AutoAsparagus: Setting up AppLauncher");
+					ASPConsoleStuff.AAprint ("Setting up AppLauncher");
 					ApplicationLauncher appinstance = ApplicationLauncher.Instance;
-					print ("AutoAsparagus: Setting up AppLauncher Button");
+					ASPConsoleStuff.AAprint ("Setting up AppLauncher Button");
 					appTexture = loadTexture ("AutoAsparagus/asparagus-app");
 					appButton = appinstance.AddModApplication (appOnTrue, appOnFalse, doNothing, doNothing, doNothing, doNothing, ApplicationLauncher.AppScenes.VAB, appTexture);
 				}
@@ -310,7 +310,7 @@ namespace AutoAsparagus {
 						if (useSmartStage) {
 							mystate = ASPState.SMARTSTAGE;
 							osd ("Calling SmartStage...");
-							print ("AutoAsparagus: Calling SmartStage");
+							ASPConsoleStuff.AAprint ("Calling SmartStage");
 						} else {
 							mystate = ASPState.ADDSTAGES;
 							osd ("Adding empty stages...");
@@ -401,7 +401,7 @@ namespace AutoAsparagus {
 		}
 
 		private void newReloadShip(){
-			print ("newReloadShip() starting...");
+			ASPConsoleStuff.AAprint ("newReloadShip() starting...");
 			EditorLogic editor = EditorLogic.fetch;
 			ConfigNode shipCfg = editor.ship.SaveShip ();
 
@@ -412,7 +412,7 @@ namespace AutoAsparagus {
 			editor.ship.LoadShip (ShipConstruction.ShipConfig);
 			Staging.SortIcons ();
 			editor.SetBackup ();
-			print ("newReloadShip() done!");
+			ASPConsoleStuff.AAprint ("newReloadShip() done!");
 		}
 
 		// called every screen refresh

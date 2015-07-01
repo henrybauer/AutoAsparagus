@@ -9,37 +9,41 @@ namespace AutoAsparagus
 	public class ASPConsoleStuff: MonoBehaviour
 	{
 
+		static public void AAprint(string tacos) {
+			print ("[AutoAsparagus]: " + tacos); // tacos are awesome
+		}
+
 		static public void printTransform(string header, Transform t){
-		print (header + ": localpos:" + t.localPosition.ToString ("F8") + "/localrot:" + t.localRotation.ToString("F8"));
-		print ("    pos:" + t.position.ToString ("F8") + "/rot:" + t.rotation.ToString("F8"));
-		print ("    scale:" + t.localScale.ToString("F8") + "/up:" + t.up.ToString ("F8")+"/for:"+t.forward.ToString("F8"));
-	}
+			AAprint (header + ": localpos:" + t.localPosition.ToString ("F8") + "/localrot:" + t.localRotation.ToString ("F8"));
+			AAprint ("    pos:" + t.position.ToString ("F8") + "/rot:" + t.rotation.ToString ("F8"));
+			AAprint ("    scale:" + t.localScale.ToString ("F8") + "/up:" + t.up.ToString ("F8") + "/for:" + t.forward.ToString ("F8"));
+		}
 
 		static public void printVector3(string header, Vector3 v){
-		print (header + ": " + v.ToString ("F8"));
+		AAprint (header + ": " + v.ToString ("F8"));
 	}
 		static public void printAttachNode(string header, AttachNode an){
-		print ("attachNode: " + an.id.ToString()+ "/" + an.attachMethod.ToString () + "/" + an.nodeType.ToString ());
-		print("      pos:"+an.position.ToString("F8")+" or:"+an.orientation.ToString("F8")+" offset:"+an.offset.ToString()+" size:"+an.size.ToString()+"/radius: "+an.radius.ToString());
-		print ("    rq:" + an.requestGate.ToString ());
+		AAprint ("attachNode: " + an.id.ToString()+ "/" + an.attachMethod.ToString () + "/" + an.nodeType.ToString ());
+		AAprint("      pos:"+an.position.ToString("F8")+" or:"+an.orientation.ToString("F8")+" offset:"+an.offset.ToString()+" size:"+an.size.ToString()+"/radius: "+an.radius.ToString());
+		AAprint ("    rq:" + an.requestGate.ToString ());
 		if (an.attachedPart == null) {
-			print ("    no attachedPart");
+			AAprint ("    no attachedPart");
 		} else {
 			printPart ("    attachedPart", an.attachedPart);
 		}
 		if (an.nodeTransform==null){
-			print ("    no nodeTransform");
+			AAprint ("    no nodeTransform");
 		} else {
 			printTransform("    nodeTransform",an.nodeTransform);
 		}
 	}
 
 		static public void dumpPartModule(PartModule pm) {
-			print ("pm: " + pm.moduleName);
-			print ("pm.enabled: "+pm.enabled.ToString()+"/"+pm.isEnabled);
-			print ("pm.gettype: " + pm.GetType ().ToString());
+			AAprint ("pm: " + pm.moduleName);
+			AAprint ("pm.enabled: "+pm.enabled.ToString()+"/"+pm.isEnabled);
+			AAprint ("pm.gettype: " + pm.GetType ().ToString());
 			if (pm.moduleName == "CModuleFuelLine") {
-				print ("FUEL LINE!");
+				AAprint ("FUEL LINE!");
 				CompoundPart cp = (CompoundPart)pm.part;
 				printPart ("target: ", cp.target);
 
@@ -49,9 +53,9 @@ namespace AutoAsparagus
 		}
 
 		static public void dumpPart(Part p){
-			print ("==== "+p.name.ToString () + ": " + p.GetInstanceID().ToString () + "/" + p.symmetryCounterparts.Count.ToString ()+"/"+p.children.Count.ToString()+"/"+p.attachMode.ToString());
+			AAprint ("==== "+p.name.ToString () + ": " + p.GetInstanceID().ToString () + "/" + p.symmetryCounterparts.Count.ToString ()+"/"+p.children.Count.ToString()+"/"+p.attachMode.ToString());
 			printTransform ("transform", p.transform);
-			//print ("  isAttached:" + p.isAttached.ToString () + "/isConnected:" + p.isConnected.ToString ());
+			//AAprint ("  isAttached:" + p.isAttached.ToString () + "/isConnected:" + p.isConnected.ToString ());
 			foreach (AttachNode an in p.attachNodes) {
 				printAttachNode ("    ", an);
 			}
@@ -60,21 +64,21 @@ namespace AutoAsparagus
 				dumpPartModule (pm);
 			}
 			foreach (Part child in p.children) {
-				print ("child: "+child.name.ToString () + ": " + child.GetInstanceID().ToString () + "/" + child.symmetryCounterparts.Count.ToString ()+"/"+child.children.Count.ToString());
+				AAprint ("child: "+child.name.ToString () + ": " + child.GetInstanceID().ToString () + "/" + child.symmetryCounterparts.Count.ToString ()+"/"+child.children.Count.ToString());
 			}
 		}
 
 
 		static public void printPart(string header, Part p){
 			if (p==null){
-				print (header + ": null!");
+				AAprint (header + ": null!");
 			} else {
-				print (header +": "+p.name.ToString () + ": " + p.GetInstanceID().ToString () + "/" + p.symmetryCounterparts.Count.ToString ()+"/"+p.children.Count.ToString());
+				AAprint (header +": "+p.name.ToString () + ": " + p.GetInstanceID().ToString () + "/" + p.symmetryCounterparts.Count.ToString ()+"/"+p.children.Count.ToString());
 			}
 		}
 
 		static public void printPartList(string title, string header, List<Part> parts){
-			print ("=== "+title+": "+parts.Count.ToString()+" parts ===");
+			AAprint ("=== "+title+": "+parts.Count.ToString()+" parts ===");
 			foreach (Part p in parts) {
 				printPart(header,p);
 			}
