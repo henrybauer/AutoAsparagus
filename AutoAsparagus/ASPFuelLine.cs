@@ -77,13 +77,48 @@ namespace AutoAsparagus
 		}
 
 		private static bool fireRayAt(Part p, Vector3 origin, Vector3 dest, out Vector3 collisionpoint){
+			// returns true for obstructed, false for clear
+
+			if (p == null) {
+				ASPConsoleStuff.AAprint ("fireRayAt.p is null!");
+				collisionpoint = origin; // must be set to something
+				return true;
+			}
+			if (p.collider == null) {
+				ASPConsoleStuff.AAprint ("fireRayAt.p.collider is null!");
+				ASPConsoleStuff.printPart ("Bad part with no collider", p);
+				collisionpoint = origin; // must be set to something
+				return true;
+			}
+			/* Can't be null
+			if (origin == null) {
+				ASPConsoleStuff.AAprint ("fireRayAt.origin is null!");
+			}
+			if (dest == null) {
+				ASPConsoleStuff.AAprint ("fireRayAt.dest is null!");
+			}*/
+
 			Ray r = new Ray ();
+			/* Can't be null
+			if (r == null) {
+				ASPConsoleStuff.AAprint ("fireRayAt.r is null!");
+			}*/
+
 			r.origin = origin;
 			r.direction = vector3direction (origin, dest);
 			float distance = Vector3.Distance (origin, dest);
 
 			RaycastHit hit = new RaycastHit ();
+			/* Can't be null
+			if (hit == null) {
+				ASPConsoleStuff.AAprint ("fireRayAt.hit is null!");
+			}*/
 			if (p.collider.Raycast (r, out hit, distance)) {
+				/* Can't be null
+				if (hit == null) {
+					ASPConsoleStuff.AAprint ("fireRayAt.hit is null!");
+				}
+				*/
 				collisionpoint = hit.point;
 				return true;
 			} else {
@@ -100,6 +135,20 @@ namespace AutoAsparagus
 
 
 		private static Boolean isFLpathObstructed(Part sourceTank,Part destTank,Vector3 midway){
+			if (sourceTank == null) {
+				ASPConsoleStuff.AAprint ("isFLpathObstructed.sourceTank is null!");
+				return true;
+			}
+			if (destTank == null) {
+				ASPConsoleStuff.AAprint ("isFLpathObstructed.destTank is null!");
+				return true;
+			}
+			/* can't be null
+			if (midway == null) {
+				ASPConsoleStuff.AAprint ("isFLpathObstructed.midway is null!");
+				return true;
+			}*/
+
 			Vector3 startPosition = new Vector3 ();
 			Vector3 destPosition = new Vector3 ();
 			getStartDestPositions (sourceTank, destTank, midway, out startPosition, out destPosition);

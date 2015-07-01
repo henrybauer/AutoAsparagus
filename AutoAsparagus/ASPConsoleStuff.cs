@@ -45,36 +45,33 @@ namespace AutoAsparagus
 			if (pm.moduleName == "CModuleFuelLine") {
 				AAprint ("FUEL LINE!");
 				CompoundPart cp = (CompoundPart)pm.part;
-				printPart ("target: ", cp.target);
+				printPart ("target", cp.target);
 
 
 			}
 
 		}
-
-		static public void dumpPart(Part p){
-			AAprint ("==== "+p.name.ToString () + ": " + p.GetInstanceID().ToString () + "/" + p.symmetryCounterparts.Count.ToString ()+"/"+p.children.Count.ToString()+"/"+p.attachMode.ToString());
-			printTransform ("transform", p.transform);
-			//AAprint ("  isAttached:" + p.isAttached.ToString () + "/isConnected:" + p.isConnected.ToString ());
-			foreach (AttachNode an in p.attachNodes) {
-				printAttachNode ("    ", an);
-			}
-
-			foreach (PartModule pm in p.Modules) {
-				dumpPartModule (pm);
-			}
-			foreach (Part child in p.children) {
-				AAprint ("child: "+child.name.ToString () + ": " + child.GetInstanceID().ToString () + "/" + child.symmetryCounterparts.Count.ToString ()+"/"+child.children.Count.ToString());
-			}
-		}
-
 
 		static public void printPart(string header, Part p){
 			if (p==null){
-				AAprint (header + ": null!");
+				AAprint (header + ": part is null!");
 			} else {
-				AAprint (header +": "+p.name.ToString () + ": " + p.GetInstanceID().ToString () + "/" + p.symmetryCounterparts.Count.ToString ()+"/"+p.children.Count.ToString());
+				AAprint (header + ": " + p.name.ToString () + ": " + p.GetInstanceID().ToString () + "/" + p.symmetryCounterparts.Count.ToString ()+"/"+p.children.Count.ToString()+"/"+p.attachMode.ToString());
 			}
+			#if DEBUG
+			printTransform ("transform", p.transform);
+			//AAprint ("  isAttached:" + p.isAttached.ToString () + "/isConnected:" + p.isConnected.ToString ());
+			foreach (AttachNode an in p.attachNodes) {
+			printAttachNode ("    ", an);
+			}
+
+			foreach (PartModule pm in p.Modules) {
+			dumpPartModule (pm);
+			}
+			foreach (Part child in p.children) {
+			AAprint ("child: "+child.name.ToString () + ": " + child.GetInstanceID().ToString () + "/" + child.symmetryCounterparts.Count.ToString ()+"/"+child.children.Count.ToString());
+			}
+			#endif
 		}
 
 		static public void printPartList(string title, string header, List<Part> parts){
@@ -89,9 +86,6 @@ namespace AutoAsparagus
 			// Get all the parts of the ship
 			var parts = editor.ship.parts;
 			printPartList("All parts of ship", "Part", parts);
-			foreach (Part p in parts) {
-				dumpPart (p);
-			}
 		}
 	}
 }

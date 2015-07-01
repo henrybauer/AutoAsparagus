@@ -287,12 +287,14 @@ namespace AutoAsparagus {
 
 						break;
 					case ASPState.ADDASP:
+						ASPConsoleStuff.ListTheShip ();
 						ASPFuelLine.AddFuelLines ();
 						mystate = ASPState.CONNECT;
 						osd("Connecting fuel lines...");
 						refreshwait = 100;
 						break;
 					case ASPState.ADDONION:
+						ASPConsoleStuff.ListTheShip ();
 						ASPFuelLine.AddOnionFuelLines ();
 						mystate = ASPState.CONNECT;
 						osd("Connecting fuel lines...");
@@ -337,6 +339,7 @@ namespace AutoAsparagus {
 						refreshwait = 10;
 						break;
 					case ASPState.DELETEFUEL:
+						ASPConsoleStuff.ListTheShip ();
 						ASPFuelLine.DeleteAllFuelLines ();
 						newReloadShip ();
 						osd ("Fuel lines deleted.");
