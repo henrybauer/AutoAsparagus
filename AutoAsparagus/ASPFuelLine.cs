@@ -262,13 +262,13 @@ namespace AutoAsparagus
 		}
 
 
-		public static void AttachFuelLine(Part sourceTank, Part destTank){
+		public static void AttachFuelLine(Part sourceTank, Part destTank, AvailablePart ap, int textureNum, string texturePath, string textureDisplayName){
 			ASPConsoleStuff.AAprint ("=== AttachFuelLine ===");
 			ASPConsoleStuff.printPart ("sourceTank", sourceTank);
 			ASPConsoleStuff.printPart ("destTank", destTank);
 
 			// Make a new FuelLine object
-			AvailablePart ap = PartLoader.getPartInfoByName ("fuelLine");
+			//AvailablePart ap = PartLoader.getPartInfoByName ("fuelLine"); 
 			UnityEngine.Object obj = UnityEngine.Object.Instantiate(ap.partPrefab);
 			CompoundPart f = (CompoundPart)obj;
 			f.gameObject.SetActive(true);
@@ -485,6 +485,14 @@ namespace AutoAsparagus
 				print (" !!! f.direction ray failed!!!");
 			}*/
 
+			if (texturePath != null) {
+				foreach (PartModule pm in f.Modules) {
+					if (pm.moduleName == "FStextureSwitch2") {
+						pm.GetType ().GetField ("selectedTexture").SetValue (pm, textureNum);
+						pm.GetType ().GetField ("selectedTextureURL").SetValue (pm, texturePath);
+					}
+				}
+			}
 
 			// add to ship
 			ASPConsoleStuff.AAprint ("    adding to ship");
@@ -571,7 +579,7 @@ namespace AutoAsparagus
 			return null;
 		}
 
-		private static Part makeFuelLineChain(List<Part> tanksToConnect, Part startTank){
+	private static Part makeFuelLineChain(List<Part> tanksToConnect, Part startTank, AvailablePart ap, int textureNum, string texturePath, string textureDisplayName){
 			Part currentTank = startTank;
 			tanksToConnect.Remove (startTank);
 			ASPConsoleStuff.printPart ("=== makeFuelLineChain, starting at", currentTank);
@@ -581,7 +589,7 @@ namespace AutoAsparagus
 			if (parentTank == null) {
 				ASPConsoleStuff.printPart ("no parent fuel tank found found!  Not connecting", currentTank);
 			} else {
-				AttachFuelLine (currentTank, parentTank);
+			AttachFuelLine (currentTank, parentTank, ap, textureNum, texturePath, textureDisplayName);
 			}
 
 			// Decide on fuel line chain length (not including fuel line to parent fuel tank we just did)
@@ -633,7 +641,7 @@ namespace AutoAsparagus
 					ASPConsoleStuff.printPart ("no nearestNeighborWithoutFuelLine found!  Not connecting", currentTank);
 				}  else {
 					// we're working backwards, away from central tank, so we connect the new tank to the existing one
-					AttachFuelLine (nextTank, currentTank);
+				AttachFuelLine (nextTank, currentTank,ap, textureNum, texturePath, textureDisplayName);
 					lastTank = nextTank;
 					currentTank = nextTank;
 					tanksToConnect.Remove (currentTank);
@@ -679,7 +687,7 @@ namespace AutoAsparagus
 			return null;
 		}
 
-		public static void AddFuelLines() {
+		public static void AddFuelLines(AvailablePart ap, int textureNum, string texturePath, string textureDisplayName) {
 			ASPConsoleStuff.AAprint ("=== AddFuelLines ===");
 			// Get all the parts of the ship
 			EditorLogic editor = EditorLogic.fetch;
@@ -730,7 +738,7 @@ namespace AutoAsparagus
 				ASPConsoleStuff.printPart ("AddFuelLines: nextTank", nextTank);
 				ASPConsoleStuff.printPartList ("AddFuelLines: Tanks to connect", "tank", tanksToConnect);
 
-				nextTank = makeFuelLineChain (tanksToConnect,nextTank);
+			nextTank = makeFuelLineChain (tanksToConnect,nextTank,ap, textureNum, texturePath, textureDisplayName);
 			}
 
 			Staging.SortIcons ();
@@ -795,7 +803,7 @@ namespace AutoAsparagus
 			return null;
 		}
 
-		public static void AddOnionFuelLines() {
+		public static void AddOnionFuelLines(AvailablePart ap, int textureNum, string texturePath, string textureDisplayName) {
 			ASPConsoleStuff.AAprint ("=== AddOnionFuelLines ===");
 			// Get all the parts of the ship
 			EditorLogic editor = EditorLogic.fetch;
@@ -848,7 +856,7 @@ namespace AutoAsparagus
 				if (parentTank == null) {
 					ASPConsoleStuff.printPart ("no parent fuel tank found found!  Not connecting", currentTank);
 				} else {
-					AttachFuelLine (currentTank, parentTank);
+				AttachFuelLine (currentTank, parentTank,ap, textureNum, texturePath, textureDisplayName);
 				}
 				tanksToConnect.Remove (currentTank);
 			}
