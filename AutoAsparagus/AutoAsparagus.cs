@@ -529,17 +529,17 @@ namespace AutoAsparagus {
 				}
 				GUILayout.EndVertical ();
 				GUILayout.EndHorizontal ();
+			}
 
-				if (partTextureNames [partToUseIndex] != null) {
-					GUILayout.BeginHorizontal ();
-					GUILayout.BeginVertical ();
-					GUILayout.Label ("Texture:");
-					GUILayout.EndVertical ();
-					GUILayout.BeginVertical ();
-					textureIndex = GUILayout.SelectionGrid (textureIndex, partTextureNames[partToUseIndex], 2, togglestyle);
-					GUILayout.EndVertical ();
-					GUILayout.EndHorizontal ();
-				}
+			if (partTextureNames [partToUseIndex] != null) {
+				GUILayout.BeginHorizontal ();
+				GUILayout.BeginVertical ();
+				GUILayout.Label ("Texture:");
+				GUILayout.EndVertical ();
+				GUILayout.BeginVertical ();
+				textureIndex = GUILayout.SelectionGrid (textureIndex, partTextureNames[partToUseIndex], 2, togglestyle);
+				GUILayout.EndVertical ();
+				GUILayout.EndHorizontal ();
 			}
 
 			GUILayout.BeginHorizontal();
