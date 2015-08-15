@@ -16,7 +16,11 @@ namespace AutoAsparagus
 
 		private static List<FuelSet> fuelSetsToConnect = new List<FuelSet>();
 
-		private static Boolean isFuelLine(Part p){
+		private static Boolean isFuelLine(Part p, string partName){
+			if (p.name == partName) {
+				return true;
+			}
+			/*
 			// is the passed part a fuel line?
 			if (p is FuelLine) {
 				return true;
@@ -27,22 +31,17 @@ namespace AutoAsparagus
 						return true;
 					}
 				}
-			}
+			}*/
 			return false;
 		}
 
-		public static List<Part> getFuelLineTargets(Part p){
+		public static List<Part> getFuelLineTargets(Part p,string partName){
 			ASPConsoleStuff.printPart ("...searching fuel lines of part", p);
 			List<Part> targets = new List<Part> ();
 			foreach (Part child in p.children) {
-				if (isFuelLine(child)) {
+				if (isFuelLine(child,partName)) {
 					// FuelLine class has a "target" attribute; Part class doesn't, so we have to re-class to access ".target"
-					Part fuelLineTarget = null;
-					if (child is FuelLine){
-						fuelLineTarget = ((FuelLine)child).target;
-					} else {
-						fuelLineTarget = ((CompoundPart)child).target;
-					}
+					Part fuelLineTarget =((CompoundPart)child).target;
 					if (fuelLineTarget != null) {
 						ASPConsoleStuff.printPart ("...found fuel line target", fuelLineTarget);
 						targets.Add (fuelLineTarget);
@@ -272,7 +271,8 @@ namespace AutoAsparagus
 			UnityEngine.Object obj = UnityEngine.Object.Instantiate(ap.partPrefab);
 			CompoundPart f = (CompoundPart)obj;
 			f.gameObject.SetActive(true);
-			f.gameObject.name = "fuelLine";
+			//f.gameObject.name = "fuelLine";
+			f.gameObject.name=ap.name;
 			f.partInfo = ap;
 			//f.highlightRecurse = true;
 			f.attachMode = AttachModes.SRF_ATTACH;
@@ -523,24 +523,24 @@ namespace AutoAsparagus
 			return Vector3.Distance(a.transform.position,b.transform.position);
 		}
 
-		private static bool hasFuelLine(Part p){
+		private static bool hasFuelLine(Part p,string partName){
 			bool boolhasFuelLine = false;
 			foreach (Part child in p.children) {
-				if (isFuelLine(child)) {
+				if (isFuelLine(child,partName)) {
 					boolhasFuelLine = true;
 				}
 			}
 			return boolhasFuelLine;
 		}
 
-		private static Part nearestNeighborWithoutFuelLine(Part tank){
+		private static Part nearestNeighborWithoutFuelLine(Part tank,string partName){
 			// Check through symmetry partners, find closest tank that doesn't have a fuel line already
 
 			List<Part> brothers = tank.symmetryCounterparts;
 			float closestDistance = 9999f;
 			Part closestPart = null;
 			foreach (Part p in brothers) {
-				if (!hasFuelLine(p)) {
+				if (!hasFuelLine(p,partName)) {
 					float distance = distanceBetweenParts (tank, p);
 					if (distance < closestDistance) {
 						closestDistance = distance;
@@ -636,7 +636,7 @@ namespace AutoAsparagus
 				}
 
 				ASPConsoleStuff.printPart ("connecting chain link #" + currentChainLength.ToString (), currentTank);
-				nextTank = nearestNeighborWithoutFuelLine (currentTank);
+				nextTank = nearestNeighborWithoutFuelLine (currentTank,ap.name);
 				if (nextTank == null) {
 					ASPConsoleStuff.printPart ("no nearestNeighborWithoutFuelLine found!  Not connecting", currentTank);
 				}  else {
@@ -650,12 +650,12 @@ namespace AutoAsparagus
 			}
 			// return the tank for the next chain
 			ASPConsoleStuff.printPart ("lastTank=", lastTank);
-			nextTank = nearestNeighborWithoutFuelLine (lastTank);
+			nextTank = nearestNeighborWithoutFuelLine (lastTank,ap.name);
 			ASPConsoleStuff.printPart("Should start next chain with",nextTank);
 			return nextTank;
 		}
 
-		private static Part findStartofChain(List<Part> tanksToConnect, Part rootPart){
+		private static Part findStartofChain(List<Part> tanksToConnect, Part rootPart, string partName){
             // start at the root node, and then look progressively down the tree for tanks to stage
 			// don't recurse down depth-first; instead do breadth-first searching
 			ASPConsoleStuff.printPart ("=== findStartofChain, starting with", rootPart);
@@ -673,7 +673,7 @@ namespace AutoAsparagus
 				List<Part> newchildren = new List<Part>();
 				// check every child at this level, before moving a level down the tree
 				foreach (Part child in children) {
-					currentTank = chooseNextTankToConnect (tanksToConnect, child);
+					currentTank = chooseNextTankToConnect (tanksToConnect, child,partName);
 					if (currentTank != null) {
 						ASPConsoleStuff.printPart ("findStartofChain returning", currentTank);
 						return currentTank;
@@ -712,7 +712,7 @@ namespace AutoAsparagus
 				}
 				Part p = tanks [0];
 				bool connectTank = true;
-				if (hasFuelLine(p)) {
+				if (hasFuelLine(p,ap.name)) {
 					ASPConsoleStuff.printPart ("Tank already has a fuel line", p);
 					connectTank = false;
 				}
@@ -733,7 +733,7 @@ namespace AutoAsparagus
 					return;
 				}
 				if (nextTank == null) {
-					nextTank = findStartofChain (tanksToConnect, parts [0]);
+				nextTank = findStartofChain (tanksToConnect, parts [0], ap.name);
 				}
 				ASPConsoleStuff.printPart ("AddFuelLines: nextTank", nextTank);
 				ASPConsoleStuff.printPartList ("AddFuelLines: Tanks to connect", "tank", tanksToConnect);
@@ -745,14 +745,14 @@ namespace AutoAsparagus
 
 		}
 
-		private static bool isTargetofFuelLine(Part target){
+		private static bool isTargetofFuelLine(Part target,string partName){
 			// Check if any fuel line anywhere points to this part
 			EditorLogic editor = EditorLogic.fetch;
 			ShipConstruct ship = editor.ship;
 			List<Part> parts = ship.parts;
 
 			foreach (Part p in parts) {
-				if (isFuelLine(p)) {
+				if (isFuelLine(p,partName)) {
 					if (p is FuelLine){
 						FuelLine f = (FuelLine)p;
 						if (f.target == target) {
@@ -769,14 +769,14 @@ namespace AutoAsparagus
 			return false;
 		}
 
-		private static Part chooseNextTankToConnect (List<Part> tanksToConnect, Part rootPart){
+		private static Part chooseNextTankToConnect (List<Part> tanksToConnect, Part rootPart, string partName){
 			// Find the inner-most tank that needs to be connected
 			ASPConsoleStuff.printPart ("chooseNextTankToConnect", rootPart);
 			foreach (Part p in rootPart.children) {
 				ASPConsoleStuff.printPart ("considering for start of chain", p);
 				if (tanksToConnect.Contains(p)){
 					ASPConsoleStuff.AAprint ("... is in tanksToConnect");
-					if ((!hasFuelLine (p)) && (!isTargetofFuelLine(p))) {
+					if ((!hasFuelLine (p,partName)) && (!isTargetofFuelLine(p,partName))) {
 						ASPConsoleStuff.AAprint ("... no fuel lines");
 						Part parentTank = findParentFuelTank (p);
 					/*
@@ -792,7 +792,7 @@ namespace AutoAsparagus
 							return p;
 						}
 					*/
-					if (!isTargetofFuelLine(parentTank)) {
+					if (!isTargetofFuelLine(parentTank,partName)) {
 						ASPConsoleStuff.printPart ("... parent isn't target of fuel line, returning p",p);
 						// tank that starts an inner chain
 						return p;
@@ -829,7 +829,7 @@ namespace AutoAsparagus
 				Part p = tanks [0];
 				bool connectTank = true;
 				foreach (Part child in p.children) {
-					if (isFuelLine(child)) {
+					if (isFuelLine(child,ap.name)) {
 						ASPConsoleStuff.printPart ("Tank already has a fuel line", p);
 						connectTank = false;
 					}
@@ -865,32 +865,35 @@ namespace AutoAsparagus
 
 		}
 
-		public static void DeleteAllFuelLines() {
+		public static int DeleteAllFuelLines(string partName) {
 			EditorLogic editor = EditorLogic.fetch;
 			ShipConstruct ship = editor.ship;
 			List<Part> parts = ship.parts;
 			List<Part> partsToDelete = new List<Part> ();
 			foreach (Part p in parts) {
-				if (isFuelLine(p)) {
+				if (isFuelLine(p,partName)) {
 					ASPConsoleStuff.printPart ("Marking fuel line for death", p);
 					partsToDelete.Add (p);
 				}
 			}
 			int safetyfactor = 10000;
+			int count = 0;
 			while (partsToDelete.Count > 0) {
 				safetyfactor = safetyfactor - 1;
 				if (safetyfactor == 0) {
 				AutoAsparagus.osd ("Infinite loop in DeleteAllFuelLines:partsToDelete.Count, aborting :(");
 					AutoAsparagus.mystate = AutoAsparagus.ASPState.IDLE;
-					return;
+					return count;
 				}
 				Part p = partsToDelete [0];
-				ASPConsoleStuff.printPart ("Deleting fuel line", p);
+				ASPConsoleStuff.printPart ("Deleting part", p);
 				Part parent = p.parent;
 				parent.removeChild (p);
 				parts.Remove (p);
 				partsToDelete.Remove (p);
+				count = count + 1;
 			}
+			return count;
 		}
 	}
 }

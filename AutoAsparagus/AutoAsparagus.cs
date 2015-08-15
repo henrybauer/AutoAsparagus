@@ -8,7 +8,6 @@ using System.Reflection;
 using KSP.IO;
 
 // FIXME project-wide: change all parent/child checking to check grandparents/grandchildren if parent/child is a fuel tank (or anything except decoupler or fuel line)
-// FIXME position fuel lines to avoid obstructions
 
 namespace AutoAsparagus {
 
@@ -79,11 +78,24 @@ namespace AutoAsparagus {
 			return GameDatabase.Instance.GetTexture(path, false);
 		}
 
-		private static bool researchedFuelLines(){
+		private static bool partResearched(AvailablePart ap){
 			if (ResearchAndDevelopment.Instance == null) {
 				ASPConsoleStuff.AAprint ("no ResearchAndDevelopment.Instance, must be sandbox mode");
 				return true;
 			}
+			if (!ResearchAndDevelopment.PartTechAvailable(ap)) {
+				ASPConsoleStuff.AAprint (ap.name+".PartTechAvailable()==false");
+				return false;
+			}
+
+			if (!ResearchAndDevelopment.PartModelPurchased (ap)) {
+				ASPConsoleStuff.AAprint (ap.name + ".PartModelPurchased()==false");
+				return false;
+			}
+			return true;
+		}
+
+		private static bool researchedFuelLines(){
 			AvailablePart ap = PartLoader.getPartInfoByName ("fuelLine");
 			if (ap == null) {
 				ASPConsoleStuff.AAprint ("no fuelLine AvailablePart()");
@@ -91,8 +103,7 @@ namespace AutoAsparagus {
 			}
 
 			ASPConsoleStuff.AAprint ("checking PartTechAvailable");
-			return (ResearchAndDevelopment.PartTechAvailable(ap));
-
+			return partResearched (ap);
 		}
 
 		internal AutoAsparagus() {
@@ -208,50 +219,6 @@ namespace AutoAsparagus {
 				SmartStageAvailable = true;
 				useSmartStage = true;
 			}
-
-			// find available fuel line parts
-			partsWeCanUse = new List<AvailablePart>();
-			foreach (AvailablePart ap in PartLoader.LoadedPartsList) {
-				Part p = ap.partPrefab;
-				if (p is CompoundPart) {
-					foreach (PartModule pm in p.Modules){
-						ASPConsoleStuff.AAprint ("module name: " + pm.moduleName);
-						if (pm.moduleName == "CModuleFuelLine") {
-							partsWeCanUse.Add (ap);
-							ASPConsoleStuff.printPart ("Fuel line part:", p);
-						}
-					}
-				}
-			}
-			partGrid = new GUIContent[partsWeCanUse.Count()];
-			partTexturePaths = new string[partsWeCanUse.Count ()][];
-			partTextureNames = new string[partsWeCanUse.Count ()][];
-			int x = 0;
-
-			foreach (AvailablePart ap in partsWeCanUse) {
-				// how do I turn ap.iconPrefab into a Texture??
-				partGrid [x] = new GUIContent (ap.title, ap.name);
-				ASPConsoleStuff.AAprint ("partGrid[" + x.ToString () + "]: " + ap.title);
-
-				Part p = ap.partPrefab;
-				partTexturePaths [x] = null;
-				foreach (PartModule pm in p.Modules){
-					if (pm.moduleName == "FStextureSwitch2") {
-						ASPConsoleStuff.AAprint ("FStextureSwitch2 detected!");
-						char[] sep = new char[1];
-						sep [0] = ';';
-
-						string textures = pm.GetType ().GetField ("textureNames").GetValue (pm).ToString();
-						ASPConsoleStuff.AAprint ("Textures (path): "+textures);
-						partTexturePaths[x] = textures.Split(sep, StringSplitOptions.RemoveEmptyEntries);
-
-						string textureDisplayNames = pm.GetType ().GetField ("textureDisplayNames").GetValue (pm).ToString();
-						ASPConsoleStuff.AAprint ("Textures (display name): "+textureDisplayNames);
-						partTextureNames[x] = textureDisplayNames.Split(sep, StringSplitOptions.RemoveEmptyEntries);
-					}
-				}
-				x = x + 1;
-			}
 		}
 
 		public void setupAppButton() {
@@ -275,6 +242,53 @@ namespace AutoAsparagus {
 		public void appOnTrue() {
 			if (researchedFuelLines()) {
 				visible = true;
+
+				// find available fuel line parts
+				partsWeCanUse = new List<AvailablePart>();
+				foreach (AvailablePart ap in PartLoader.LoadedPartsList) {
+					Part p = ap.partPrefab;
+					if (p is CompoundPart) {
+						if (partResearched(ap)) {
+							partsWeCanUse.Add (ap);
+						}
+						/*					foreach (PartModule pm in p.Modules){
+						ASPConsoleStuff.AAprint ("module name: " + pm.moduleName);
+						if (pm.moduleName == "CModuleFuelLine") {
+							partsWeCanUse.Add (ap);
+							ASPConsoleStuff.printPart ("Fuel line part:", p);
+						}
+					}
+*/				}
+				}
+				partGrid = new GUIContent[partsWeCanUse.Count()];
+				partTexturePaths = new string[partsWeCanUse.Count ()][];
+				partTextureNames = new string[partsWeCanUse.Count ()][];
+				int x = 0;
+
+				foreach (AvailablePart ap in partsWeCanUse) {
+					// how do I turn ap.iconPrefab into a Texture??
+					partGrid [x] = new GUIContent (ap.title, ap.name);
+					ASPConsoleStuff.AAprint ("partGrid[" + x.ToString () + "]: " + ap.title);
+
+					Part p = ap.partPrefab;
+					partTexturePaths [x] = null;
+					foreach (PartModule pm in p.Modules){
+						if (pm.moduleName == "FStextureSwitch2") {
+							ASPConsoleStuff.AAprint ("FStextureSwitch2 detected!");
+							char[] sep = new char[1];
+							sep [0] = ';';
+
+							string textures = pm.GetType ().GetField ("textureNames").GetValue (pm).ToString();
+							ASPConsoleStuff.AAprint ("Textures (path): "+textures);
+							partTexturePaths[x] = textures.Split(sep, StringSplitOptions.RemoveEmptyEntries);
+
+							string textureDisplayNames = pm.GetType ().GetField ("textureDisplayNames").GetValue (pm).ToString();
+							ASPConsoleStuff.AAprint ("Textures (display name): "+textureDisplayNames);
+							partTextureNames[x] = textureDisplayNames.Split(sep, StringSplitOptions.RemoveEmptyEntries);
+						}
+					}
+					x = x + 1;
+				}
 			} else {
 				osd("Fuel lines have not been researched yet!");
 				visible = false;
@@ -358,7 +372,7 @@ namespace AutoAsparagus {
 						}
 						ASPFuelLine.AddFuelLines (partsWeCanUse [partToUseIndex], textureNum, texturePath, textureName);
 						mystate = ASPState.CONNECT;
-						osd("Connecting fuel lines...");
+						osd("Connecting parts...");
 						refreshwait = 100;
 						break;
 					case ASPState.ADDONION:
@@ -370,7 +384,7 @@ namespace AutoAsparagus {
 						}
 						ASPFuelLine.AddOnionFuelLines (partsWeCanUse[partToUseIndex], textureNum, texturePath, textureName);
 						mystate = ASPState.CONNECT;
-						osd("Connecting fuel lines...");
+						osd("Connecting parts...");
 						refreshwait = 100;
 						break;
 					case ASPState.CONNECT:
@@ -398,7 +412,7 @@ namespace AutoAsparagus {
 						refreshwait = 10;
 						break;
 					case ASPState.STAGE:
-						ASPStaging.AsaparagusTheShip ();
+						ASPStaging.AsaparagusTheShip (partsWeCanUse[partToUseIndex].name);
 						mystate = ASPState.AFTERSTAGE;
 						osd ("Decoupler staging done, refreshing...");
 						refreshwait = 10;
@@ -413,9 +427,9 @@ namespace AutoAsparagus {
 						break;
 					case ASPState.DELETEFUEL:
 						ASPConsoleStuff.ListTheShip ();
-						ASPFuelLine.DeleteAllFuelLines ();
+						int count = ASPFuelLine.DeleteAllFuelLines (partsWeCanUse[partToUseIndex].name);
 						newReloadShip ();
-						osd ("Fuel lines deleted.");
+						osd (count.ToString()+" parts deleted.");
 						mystate = ASPState.IDLE;
 						break;
 					case ASPState.FINALREFRESH:
@@ -497,17 +511,17 @@ namespace AutoAsparagus {
 			GUILayout.BeginHorizontal();
 			if (GUILayout.Button(new GUIContent ("Asparagus",aspTexture, "Create fuel lines and stage the ship, asparagus-style"),picbutton)) {
 				mystate = ASPState.ADDASP;
-				osd("Adding fuel lines in asparagus style...");
+				osd("Adding parts in asparagus style...");
 			}
 			if (GUILayout.Button (new GUIContent("Onion",onionTexture, "Create fuel lines and stage the ship, onion-style"), picbutton)) {
 				mystate = ASPState.ADDONION;
-				osd("Adding fuel lines in onion style...");
+				osd("Adding parts in onion style...");
 			}
 			GUILayout.EndHorizontal();
 
 			GUILayout.BeginHorizontal();
-			if (GUILayout.Button (new GUIContent("Delete fuel lines",nofuelTexture, "Delete fuel lines"), picbutton)) {
-				osd("Deleting fuel lines...");
+			if (GUILayout.Button (new GUIContent("Delete all "+partsWeCanUse[partToUseIndex].title,nofuelTexture, "Delete fuel lines"), picbutton)) {
+				osd("Deleting parts...");
 				mystate = ASPState.DELETEFUEL;
 			}
 			GUILayout.EndHorizontal();
@@ -516,7 +530,7 @@ namespace AutoAsparagus {
 				// choose part to use for fuel lines
 				GUILayout.BeginHorizontal ();
 				GUILayout.BeginVertical ();
-				GUILayout.Label ("Fuel line part:",labelstyle);
+				GUILayout.Label ("Part to use:",labelstyle);
 				GUILayout.EndVertical ();
 
 				GUILayout.BeginVertical ();

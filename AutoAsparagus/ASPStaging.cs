@@ -203,7 +203,7 @@ namespace AutoAsparagus
 			}
 		}
 
-		static public void AsaparagusTheShip(){
+		static public void AsaparagusTheShip(string partName){
 			var editor = EditorLogic.fetch;
 
 			// Get all the parts of the ship
@@ -259,7 +259,7 @@ namespace AutoAsparagus
 					ASPConsoleStuff.printPart ("Following fuel line from", p);
 					Part r = p;
 					p = null;
-					foreach (Part target in ASPFuelLine.getFuelLineTargets(r)) {
+					foreach (Part target in ASPFuelLine.getFuelLineTargets(r,partName)) {
 						if (tanks.Contains(target)) {  // we're only following fuel lines in the asparagus
 							ASPConsoleStuff.printPart ("..followed fuel line to", target);
 							p = target;
@@ -275,7 +275,7 @@ namespace AutoAsparagus
 					ASPConsoleStuff.printPart ("Checking tank "+x.ToString()+" of "+tanksToStage.Count+" to insert in chain", p);
 					x = x - 1;
 
-					foreach (Part target in ASPFuelLine.getFuelLineTargets(p)) {
+					foreach (Part target in ASPFuelLine.getFuelLineTargets(p,partName)) {
 						if (chain[0]==target) {
 							ASPConsoleStuff.printPart ("..prepending to chain", target);
 							chain.Insert (0, p);
