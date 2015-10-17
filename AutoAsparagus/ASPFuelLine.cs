@@ -8,6 +8,7 @@ using KramaxReloadExtensions;
 
 namespace AutoAsparagus
 {
+	#if DEBUG
 	public class ASPFuelLine: ReloadableMonoBehaviour
 	#else
 	public class ASPFuelLine: MonoBehaviour

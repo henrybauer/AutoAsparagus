@@ -17,6 +17,7 @@ namespace AutoAsparagus {
 	//KSPAddon.Startup.EditorVAB
 	//KSPAddon.Startup.EveryScene
 	[KSPAddon(KSPAddon.Startup.EditorVAB, false)]
+	#if DEBUG
 	public class AutoAsparagus: ReloadableMonoBehaviour
 	#else
 	public class AutoAsparagus: MonoBehaviour
