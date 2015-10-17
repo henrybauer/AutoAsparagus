@@ -2,10 +2,16 @@ using System;
 using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
+#if DEBUG
+using KramaxReloadExtensions;
+#endif
 
 namespace AutoAsparagus
 {
+	public class ASPFuelLine: ReloadableMonoBehaviour
+	#else
 	public class ASPFuelLine: MonoBehaviour
+	#endif
 	{
 
 		private class FuelSet {

@@ -43,6 +43,9 @@
       <HintPath>..\..\..\dev\Kerbal Space Program\KSP.app\Contents\Data\Managed\System.dll</HintPath>
       <Private>False</Private>
     </Reference>
+    <Reference Condition="'$(Configuration)' == 'Debug'" Include="KramaxReloadExtensions">
+      <HintPath>..\..\..\dev\Kerbal Space Program\GameData\KramaxPluginReload\Plugins\KramaxReloadExtensions.dll</HintPath>
+    </Reference>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Properties\AssemblyInfo.cs" />
@@ -57,5 +60,6 @@
     <None Include="..\AutoAsparagus.version">
       <Link>AutoAsparagus.version</Link>
     </None>
+    <None Include="TODO.txt" />
   </ItemGroup>
 </Project>

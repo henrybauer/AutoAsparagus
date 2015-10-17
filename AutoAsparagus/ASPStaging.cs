@@ -2,10 +2,17 @@ using System;
 using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
+#if DEBUG
+using KramaxReloadExtensions;
+#endif
 
 namespace AutoAsparagus
 {
+	#if DEBUG
+	public class ASPStaging: ReloadableMonoBehaviour
+	#else
 	public class ASPStaging: MonoBehaviour
+	#endif
 	{
 
 		static private void stageChildren(Part p, int stage){

@@ -3,10 +3,17 @@ using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+#if DEBUG
+using KramaxReloadExtensions;
+#endif
 
 namespace AutoAsparagus
 {
+	#if DEBUG
+	public class ASPConsoleStuff: ReloadableMonoBehaviour
+	#else
 	public class ASPConsoleStuff: MonoBehaviour
+	#endif
 	{
 
 		static public void AAprint(string tacos) {

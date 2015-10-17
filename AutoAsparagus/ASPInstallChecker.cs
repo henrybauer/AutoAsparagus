@@ -14,13 +14,20 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using UnityEngine;
+#if DEBUG
+using KramaxReloadExtensions;
+#endif
 
 namespace AutoAsparagus
 {
 	// Be sure to target .NET 3.5 or you'll get some bogus error on startup!
 
 	[KSPAddon(KSPAddon.Startup.MainMenu, true)]
-	internal class ASPInstallChecker : MonoBehaviour
+	#if DEBUG
+	internal class ASPInstallChecker: ReloadableMonoBehaviour
+	#else
+	internal class ASPInstallChecker: MonoBehaviour
+	#endif
 	{
 		protected void Start()
 		{

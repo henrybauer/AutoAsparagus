@@ -6,6 +6,9 @@ using System.Collections.Generic;
 using System.Reflection;
 //using Toolbar;
 using KSP.IO;
+#if DEBUG
+using KramaxReloadExtensions;
+#endif
 
 // FIXME project-wide: change all parent/child checking to check grandparents/grandchildren if parent/child is a fuel tank (or anything except decoupler or fuel line)
 
@@ -14,7 +17,10 @@ namespace AutoAsparagus {
 	//KSPAddon.Startup.EditorVAB
 	//KSPAddon.Startup.EveryScene
 	[KSPAddon(KSPAddon.Startup.EditorVAB, false)]
+	public class AutoAsparagus: ReloadableMonoBehaviour
+	#else
 	public class AutoAsparagus: MonoBehaviour
+	#endif
 	{
 		//private IButton aspButton;
 		//private IButton onionButton;
