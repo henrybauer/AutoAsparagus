@@ -52,8 +52,11 @@ namespace AutoAsparagus
 			if (pm.moduleName == "CModuleFuelLine") {
 				AAprint ("FUEL LINE!");
 				CompoundPart cp = (CompoundPart)pm.part;
-				printPart ("target", cp.target);
-
+				if (cp.target == null) {
+					print ("target is null");
+				} else {
+					printPart ("target", cp.target);
+				}
 
 			}
 
@@ -65,7 +68,7 @@ namespace AutoAsparagus
 			} else {
 				AAprint (header + ": " + p.name.ToString () + ": " + p.GetInstanceID().ToString () + "/" + p.symmetryCounterparts.Count.ToString ()+"/"+p.children.Count.ToString()+"/"+p.attachMode.ToString());
 			}
-			#if DEBUG
+			#if superDEBUG
 			printTransform ("transform", p.transform);
 			//AAprint ("  isAttached:" + p.isAttached.ToString () + "/isConnected:" + p.isConnected.ToString ());
 			foreach (AttachNode an in p.attachNodes) {
