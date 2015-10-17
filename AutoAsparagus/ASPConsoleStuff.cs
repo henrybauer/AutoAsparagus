@@ -64,6 +64,7 @@ namespace AutoAsparagus
 
 		static private Dictionary<string,string> uglyfriends = new Dictionary<string,string>();
 		static private int friendlyNameCount = 0;
+		static private int friendlyNameGeneration = 0;
 		static private string[] friendlyNamesStatic = {
 				"James",
 				"John",
@@ -271,10 +272,14 @@ namespace AutoAsparagus
 			if (uglyfriends.ContainsKey (uglyName)) {
 				return uglyfriends [uglyName];
 			} else {
-				if (friendlyNameCount > friendlyNamesStatic.Length) {
+				if (friendlyNameCount > friendlyNamesStatic.Length-1) {
 					friendlyNameCount = 0;
+					friendlyNameGeneration = friendlyNameGeneration + 1;
 				}
 				string affableName = friendlyNamesStatic [friendlyNameCount];
+				if (friendlyNameGeneration > 0) {
+					affableName = affableName + " " + friendlyNameGeneration.ToString ();
+				}
 				friendlyNameCount = friendlyNameCount + 1;
 				uglyfriends [uglyName] = affableName;
 				return affableName;
