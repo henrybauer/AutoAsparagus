@@ -30,13 +30,13 @@ namespace AutoAsparagus
 		AAprint (header + ": " + v.ToString ("F8"));
 	}
 		static public void printAttachNode(string header, AttachNode an){
-		AAprint ("attachNode: " + an.id.ToString()+ "/" + an.attachMethod.ToString () + "/" + an.nodeType.ToString ());
+		AAprint ("attachNofde: " + an.id.ToString()+ "/" + an.attachMethod.ToString () + "/" + an.nodeType.ToString ());
 		AAprint("      pos:"+an.position.ToString("F8")+" or:"+an.orientation.ToString("F8")+" offset:"+an.offset.ToString()+" size:"+an.size.ToString()+"/radius: "+an.radius.ToString());
 		AAprint ("    rq:" + an.requestGate.ToString ());
 		if (an.attachedPart == null) {
 			AAprint ("    no attachedPart");
 		} else {
-			printPart ("    attachedPart", an.attachedPart);
+			print ("    attachedPart" + an.attachedPart.name);  // don't do printPart or it will loop
 		}
 		if (an.nodeTransform==null){
 			AAprint ("    no nodeTransform");
