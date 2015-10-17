@@ -17,11 +17,11 @@ namespace AutoAsparagus {
 	//KSPAddon.Startup.EditorVAB
 	//KSPAddon.Startup.EveryScene
 	[KSPAddon(KSPAddon.Startup.EditorVAB, false)]
-	#if DEBUG
+#if DEBUG
 	public class AutoAsparagus: ReloadableMonoBehaviour
-	#else
+#else
 	public class AutoAsparagus: MonoBehaviour
-	#endif
+#endif
 	{
 		//private IButton aspButton;
 		//private IButton onionButton;
@@ -65,6 +65,7 @@ namespace AutoAsparagus {
 		private string tooltip = "";
 		private static string osdmessage = null;
 		private static float osdtime = Time.time;
+		private string versionString = "unknown version";
 
 		private int windowID = new System.Random().Next(int.MaxValue);
 
@@ -79,6 +80,11 @@ namespace AutoAsparagus {
 		string[][] partTexturePaths; //yes, an array of arrays
 		string[][] partTextureNames; //yes, an array of arrays
 		public int textureIndex = 0 ;
+
+		#if DEBUG
+		List<Part> tanks = new List<Part>();
+		public static int onionStop = 99;
+		#endif
 
 		private static Texture2D loadTexture(string path) {
 			ASPConsoleStuff.AAprint ("loading texture: " + path);
@@ -226,6 +232,7 @@ namespace AutoAsparagus {
 				SmartStageAvailable = true;
 				useSmartStage = true;
 			}
+			versionString = Assembly.GetCallingAssembly().GetName().Version.ToString();
 		}
 
 		public void setupAppButton() {
@@ -343,7 +350,21 @@ namespace AutoAsparagus {
 					switch (mystate) {
 					case ASPState.IDLE:
 
-						windowRect = clampToScreen (GUILayout.Window (windowID, windowRect, OnWindow, "AutoAsparagus"));
+						#if DEBUG
+						// draw labels on the tanks
+						if (tanks == null ){
+							tanks = ASPStaging.findFuelTanks (EditorLogic.fetch.ship.Parts);
+						} else {
+							foreach (Part p in tanks) {
+								if (p!=null){
+									Vector3 position = Camera.main.WorldToScreenPoint(p.transform.position);
+									GUI.Label(new Rect(position.x, Screen.height-position.y,200,30),ASPConsoleStuff.getFriendlyName(p.GetInstanceID().ToString()));
+								}
+							}
+						}
+						#endif
+
+						windowRect = clampToScreen (GUILayout.Window (windowID, windowRect, OnWindow, "AutoAsparagus "+versionString));
 
 						mousepos = new Vector2 (Input.mousePosition.x, Input.mousePosition.y);
 
@@ -377,7 +398,7 @@ namespace AutoAsparagus {
 							texturePath = partTexturePaths [partToUseIndex] [textureIndex];
 							textureName = partTextureNames [partToUseIndex] [textureIndex];
 						}
-						ASPFuelLine.AddFuelLines (partsWeCanUse [partToUseIndex], textureNum, texturePath, textureName);
+						ASPFuelLine.AddAsparagusFuelLines (partsWeCanUse [partToUseIndex], textureNum, texturePath, textureName);
 						mystate = ASPState.CONNECT;
 						osd("Connecting parts...");
 						refreshwait = 100;
@@ -625,6 +646,7 @@ namespace AutoAsparagus {
 			GUILayout.BeginHorizontal();
 			if (GUILayout.Button("DEV - Dump the ship",buttonStyle)) {
 				ASPConsoleStuff.ListTheShip ();
+				tanks = ASPStaging.findFuelTanks (EditorLogic.fetch.ship.Parts);
 			}
 			GUILayout.EndHorizontal();
 
@@ -637,6 +659,14 @@ namespace AutoAsparagus {
 				}
 			}
 			GUILayout.EndHorizontal();
+
+			GUILayout.BeginHorizontal();
+			string onionStopString = GUILayout.TextField(onionStop.ToString());
+			if (int.TryParse(onionStopString,out onionStop)) {
+				onionStop = Mathf.Clamp(onionStop,0,999);
+			}
+			GUILayout.EndHorizontal();
+
 #endif
 
 
@@ -654,7 +684,7 @@ namespace AutoAsparagus {
 
 // The block below is only for use during development.  It loads a quicksave game name "dev" and goes right into the editor.
 #if DEBUG
-[KSPAddon(KSPAddon.Startup.MainMenu, false)]
+/*[KSPAddon(KSPAddon.Startup.MainMenu, false)]
 public class Debug_AutoLoadQuicksaveOnStartup: UnityEngine.MonoBehaviour
 {
 	public static bool first = true;
@@ -672,4 +702,5 @@ public class Debug_AutoLoadQuicksaveOnStartup: UnityEngine.MonoBehaviour
 		}
 	}
 }
+*/
 #endif

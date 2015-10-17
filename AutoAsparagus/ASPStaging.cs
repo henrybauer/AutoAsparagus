@@ -27,8 +27,16 @@ namespace AutoAsparagus
 					child.inverseStage = stage;
 				}
 			}
-
 		}
+
+		static public bool isDecoupler(Part p){
+			if (p==null) {
+				ASPConsoleStuff.AAprint ("isDecoupler passed a null!");
+				return false;
+			}
+			return (p.name.ToLower ().Contains ("decoupler"));
+		}
+
 		static public void stageChain(List<Part> chain){
 			ASPConsoleStuff.printPartList ("== Staging chain", "chain part", chain);
 
@@ -55,7 +63,7 @@ namespace AutoAsparagus
 				// Parent should be a decoupler
 				Part parent = chain [partNumber].parent;
 				ASPConsoleStuff.printPart ("..parent is ", parent);
-				if (parent.name.ToLower().Contains ("decoupler")) {
+				if (isDecoupler(parent)) {
 					ASPConsoleStuff.printPart ("..setting part " + partNumber.ToString () + " to stage " + stage.ToString (), chain [partNumber]);
 					chain [partNumber].parent.inverseStage = stage;
 					chain [partNumber].inverseStage = stage;
@@ -121,11 +129,12 @@ namespace AutoAsparagus
 			return false;
 		}
 
-		static public List<Part> findSymettricalFuelTanks(List<Part> parts) {
+		static public List<Part> findFuelTanks(List<Part> parts) {
 			List<Part> tanks = new List<Part>();
-			ASPConsoleStuff.AAprint ("=== Looking for symmetrical fuel tanks");
+			ASPConsoleStuff.AAprint ("=== Looking for fuel tanks");
 			foreach (Part p in parts) {
-				if ((isFuelTank(p)) && (p.symmetryCounterparts.Count>0) && (!isFuelTank(p.parent))){
+				//if ((isFuelTank(p)) && (p.symmetryCounterparts.Count>0) && (!isFuelTank(p.parent))){
+				if ((isFuelTank(p)) && (!isFuelTank(p.parent))){
 					ASPConsoleStuff.printPart ("Adding fuel tank", p);
 					tanks.Add (p);
 				}
@@ -170,7 +179,7 @@ namespace AutoAsparagus
 
 			List<Part> decouplers = new List<Part>();
 			foreach (Part p in parts) {
-				if (p.name.ToLower ().Contains ("decoupler")) {
+				if (isDecoupler(p)) {
 					if (p.symmetryCounterparts.Count > 0) {
 						decouplers.Add (p);
 					}
@@ -218,7 +227,7 @@ namespace AutoAsparagus
 			ASPConsoleStuff.printPartList("All parts of ship", "Part", parts);
 
 			// Find the symmetrical fuel tanks
-			List<Part> tanks = findSymettricalFuelTanks (parts);
+			List<Part> tanks = findFuelTanks (parts);
 		
 			ASPConsoleStuff.AAprint("=== Tanks ===");
 

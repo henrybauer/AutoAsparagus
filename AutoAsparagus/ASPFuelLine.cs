@@ -21,6 +21,8 @@ namespace AutoAsparagus
 			public CompoundPart fl { get; set; }
 		}
 
+		private static SortedDictionary<int,List<Part>> OnionRings;
+
 		private static List<FuelSet> fuelSetsToConnect = new List<FuelSet>();
 
 		private static Boolean isFuelLine(Part p, string partName){
@@ -163,14 +165,14 @@ namespace AutoAsparagus
 			ShipConstruct ship = editor.ship;
 			List<Part> parts = ship.parts;
 
-			ASPConsoleStuff.printVector3 ("testing midway", midway);
+			//ASPConsoleStuff.printVector3 ("testing midway", midway);
 			Vector3 collisionpoint = new Vector3 ();
 			foreach (Part p in parts) {
 				if ((p==destTank) || (p==destTank)){
 					continue;
 				}
 				if (fireRayAt (p, startPosition, destPosition, out collisionpoint)) {
-					ASPConsoleStuff.printPart ("**** fuel line is obstructed at "+collisionpoint.ToString("F2")+" by", p);
+					//ASPConsoleStuff.printPart ("**** fuel line is obstructed at "+collisionpoint.ToString("F2")+" by", p);
 					return true;
 				}
 
@@ -208,7 +210,7 @@ namespace AutoAsparagus
 				foreach (Vector3 barrelStartPos in barrelStart) {
 					foreach (Vector3 barrelDestPos in barrelDest) {
 						if (fireRayAt (p, barrelStartPos, barrelDestPos, out collisionpoint)) {
-							ASPConsoleStuff.printPart ("**** fuel line barrel is obstructed at "+collisionpoint.ToString("F2")+" by", p);
+							//ASPConsoleStuff.printPart ("**** fuel line barrel is obstructed at "+collisionpoint.ToString("F2")+" by", p);
 							return true;
 						}
 					}
@@ -342,7 +344,7 @@ namespace AutoAsparagus
 						newmidway.x = midway.x + xinc;
 						foreach (float zinc in new float[] {0f, adjustment, -adjustment}) {
 							newmidway.z = midway.z + zinc;
-							ASPConsoleStuff.AAprint ("Testing adjustment of " + adjustment.ToString () + ", increment " + adjustmentincrement.ToString ());
+							//ASPConsoleStuff.AAprint ("Testing adjustment of " + adjustment.ToString () + ", increment " + adjustmentincrement.ToString ());
 							flcollide = isFLpathObstructed (sourceTank, destTank, newmidway);
 							if (!flcollide) {
 								midway = newmidway;
@@ -540,10 +542,8 @@ namespace AutoAsparagus
 			return boolhasFuelLine;
 		}
 
-		private static Part nearestNeighborWithoutFuelLine(Part tank,string partName){
+		private static Part nearestNeighborWithoutFuelLine(Part tank,string partName, List<Part> brothers){
 			// Check through symmetry partners, find closest tank that doesn't have a fuel line already
-
-			List<Part> brothers = tank.symmetryCounterparts;
 			float closestDistance = 9999f;
 			Part closestPart = null;
 			foreach (Part p in brothers) {
@@ -586,7 +586,7 @@ namespace AutoAsparagus
 			return null;
 		}
 
-	private static Part makeFuelLineChain(List<Part> tanksToConnect, Part startTank, AvailablePart ap, int textureNum, string texturePath, string textureDisplayName){
+	private static Part makeFuelLineChain(List<Part> tanksToConnect, Part startTank, AvailablePart ap, int textureNum, string texturePath, string textureDisplayName, int numberOfTanks){
 			Part currentTank = startTank;
 			tanksToConnect.Remove (startTank);
 			ASPConsoleStuff.printPart ("=== makeFuelLineChain, starting at", currentTank);
@@ -606,7 +606,6 @@ namespace AutoAsparagus
 			// 4-way symmetry will have (4-2)/2 = 1 for each side
 			// 2-way symmetry will have (2-2)/2 = 0 for each side (we will just connect the tanks to the central tank)
 
-			int numberOfTanks = (currentTank.symmetryCounterparts.Count + 1);
 			int tanksToDropAtOnce = 2;
 
 			int[] primes = new int[] {
@@ -615,19 +614,20 @@ namespace AutoAsparagus
 				11,
 				7,
 				5,
-				3,	
+				3,
 				2,
 			};
 
 			foreach (int prime in primes) {
+				ASPConsoleStuff.AAprint ("Testing prime " + prime.ToString ());
 				if ((numberOfTanks % prime) == 0) {
 					tanksToDropAtOnce = prime;
 				}
 			}
 
-		int chainLength = ((currentTank.symmetryCounterparts.Count - 1) / tanksToDropAtOnce);
+			int chainLength = (numberOfTanks / tanksToDropAtOnce-1);
 
-		ASPConsoleStuff.AAprint("Fuel line chain length: "+chainLength.ToString()+", dropping "+tanksToDropAtOnce.ToString()+" tanks at once (from "+numberOfTanks.ToString()+" tanks)");
+			ASPConsoleStuff.AAprint("Fuel line chain length: "+chainLength.ToString()+", dropping "+tanksToDropAtOnce.ToString()+" tanks at once (from "+numberOfTanks.ToString()+" tanks)");
 
 			// Now connect chainLength number of tanks to the first part
 			int currentChainLength = chainLength;
@@ -643,7 +643,7 @@ namespace AutoAsparagus
 				}
 
 				ASPConsoleStuff.printPart ("connecting chain link #" + currentChainLength.ToString (), currentTank);
-				nextTank = nearestNeighborWithoutFuelLine (currentTank,ap.name);
+				nextTank = nearestNeighborWithoutFuelLine (currentTank,ap.name,tanksToConnect);
 				if (nextTank == null) {
 					ASPConsoleStuff.printPart ("no nearestNeighborWithoutFuelLine found!  Not connecting", currentTank);
 				}  else {
@@ -657,7 +657,7 @@ namespace AutoAsparagus
 			}
 			// return the tank for the next chain
 			ASPConsoleStuff.printPart ("lastTank=", lastTank);
-			nextTank = nearestNeighborWithoutFuelLine (lastTank,ap.name);
+			nextTank = nearestNeighborWithoutFuelLine (lastTank,ap.name,tanksToConnect);
 			ASPConsoleStuff.printPart("Should start next chain with",nextTank);
 			return nextTank;
 		}
@@ -694,18 +694,30 @@ namespace AutoAsparagus
 			return null;
 		}
 
-		public static void AddFuelLines(AvailablePart ap, int textureNum, string texturePath, string textureDisplayName) {
-			ASPConsoleStuff.AAprint ("=== AddFuelLines ===");
+		public static int countDecouplersToRoot (Part p){
+			int x = 0;
+			Part currentPart = p;
+			while (currentPart != null) {
+				if (ASPStaging.isDecoupler(currentPart)) {
+					x = x + 1;
+				}
+				currentPart = currentPart.parent;
+			}
+			return x;
+		}
+
+		public static void AddAsparagusFuelLines(AvailablePart ap, int textureNum, string texturePath, string textureDisplayName) {
+			ASPConsoleStuff.AAprint ("=== AddAsparagusFuelLines ===");
 			// Get all the parts of the ship
 			EditorLogic editor = EditorLogic.fetch;
 			ShipConstruct ship = editor.ship;
 			List<Part> parts = ship.parts;
 
 			// start a new list of fuel lines to connect
-		//fuelSetsToConnect = new List<FuelSet>();
+			//fuelSetsToConnect = new List<FuelSet>();
 
 			// Find the symmetrical fuel tanks
-			List<Part> tanks = ASPStaging.findSymettricalFuelTanks (parts);
+			List<Part> tanks = ASPStaging.findFuelTanks (parts);
 			List<Part> tanksToConnect = new List<Part> ();
 
 			// get list of tanks to connect
@@ -730,22 +742,73 @@ namespace AutoAsparagus
 				tanks.Remove (p);
 			}
 
-			Part nextTank = null;
-			safetyfactor = 10000;
-			while (tanksToConnect.Count > 0) {
-				safetyfactor = safetyfactor - 1;
-				if (safetyfactor == 0) {
-					AutoAsparagus.osd ("Infinite loop in AddFuelLines:tanksToConnect.Count, aborting :(");
-					AutoAsparagus.mystate = AutoAsparagus.ASPState.IDLE;
-					return;
-				}
-				if (nextTank == null) {
-				nextTank = findStartofChain (tanksToConnect, parts [0], ap.name);
-				}
-				ASPConsoleStuff.printPart ("AddFuelLines: nextTank", nextTank);
-				ASPConsoleStuff.printPartList ("AddFuelLines: Tanks to connect", "tank", tanksToConnect);
+		/*
+repeat for every central tank with >1 decoupler {
+all decoupler+tank attached is onionRing[0]
+all decoupler+tank attached to onionRing[0] is onionRing [1]
+all decoupler+tank attached to onionRing[1] is onionRing [2], etc
 
-			nextTank = makeFuelLineChain (tanksToConnect,nextTank,ap, textureNum, texturePath, textureDisplayName);
+fuel routing:
+
+start central tank: getclosest of onionRing[0]
+wire up onionRing[0] with onionRing[0].Count/2 tanks
+getclosest of onionRing[1], wire up onionRing[1].Count/2 tanks
+getclosest of onionRing[2], wire up onionRing[2].Count/2 tanks, etc
+start again from central tank: getclosest of onionRing[0]
+wire up onionRing[0] with onionRing[0].Count/2 tanks
+getclosest of onionRing[1], wire up onionRing[1].Count/2 tanks
+getclosest of onionRing[2], wire up onionRing[2].Count/2 tanks, etc
+
+}
+*/
+			OnionRings = new SortedDictionary<int, List<Part>> ();
+			int onionRingLevel = 0;
+			foreach (Part p in tanksToConnect) {
+				onionRingLevel = countDecouplersToRoot (p);
+				if (OnionRings.ContainsKey (onionRingLevel)) {
+					OnionRings [onionRingLevel].Add (p);
+				} else {
+					List<Part> foo = new List<Part> ();
+					foo.Add (p);
+					OnionRings.Add (onionRingLevel, foo);
+				}
+			}
+
+			// debug printing of onion rings
+			foreach (int key in OnionRings.Keys) {
+				ASPConsoleStuff.AAprint ("Onion ring: " + key.ToString ());
+				foreach (Part p in OnionRings[key]) {
+					ASPConsoleStuff.printPart ("onion", p);
+				}
+			}
+
+			foreach (int onionLevel in OnionRings.Keys) {
+				int orignalNumberOfTanks = OnionRings [onionLevel].Count;
+				ASPConsoleStuff.AAprint ("Onion ring: " + onionLevel.ToString ()+", "+orignalNumberOfTanks +" tanks");
+				if (orignalNumberOfTanks < 2) {
+					ASPConsoleStuff.AAprint ("Skipping ring because it has too few members");
+				} else if (onionLevel>AutoAsparagus.onionStop) {
+					ASPConsoleStuff.AAprint ("Skipping ring because we hit onionStop");
+				} else {
+					tanksToConnect = OnionRings [onionLevel];
+					Part nextTank = null;
+					safetyfactor = 10000;
+					while (tanksToConnect.Count > 0) {
+						safetyfactor = safetyfactor - 1;
+						if (safetyfactor == 0) {
+							AutoAsparagus.osd ("Infinite loop in AddFuelLines:tanksToConnect.Count, aborting :(");
+							AutoAsparagus.mystate = AutoAsparagus.ASPState.IDLE;
+							return;
+						}
+						if (nextTank == null) {
+							nextTank = findStartofChain (tanksToConnect, parts [0], ap.name);
+						}
+						ASPConsoleStuff.printPart ("AddFuelLines: nextTank", nextTank);
+						ASPConsoleStuff.printPartList ("AddFuelLines: Tanks to connect", "tank", tanksToConnect);
+
+					nextTank = makeFuelLineChain (tanksToConnect, nextTank, ap, textureNum, texturePath, textureDisplayName, orignalNumberOfTanks);
+					}
+				}
 			}
 
 			Staging.SortIcons ();
@@ -760,16 +823,9 @@ namespace AutoAsparagus
 
 			foreach (Part p in parts) {
 				if (isFuelLine(p,partName)) {
-					if (p is FuelLine){
-						FuelLine f = (FuelLine)p;
-						if (f.target == target) {
-							return true;
-						}
-					} else {
-						CompoundPart f = (CompoundPart)p;
-						if (f.target == target) {
-							return true;
-						}
+					CompoundPart f = (CompoundPart)p;
+					if (f.target == target) {
+						return true;
 					}
 				}
 			}
@@ -821,7 +877,7 @@ namespace AutoAsparagus
 			//fuelSetsToConnect = new List<FuelSet>();
 
 			// Find the symmetrical fuel tanks
-			List<Part> tanks = ASPStaging.findSymettricalFuelTanks (parts);
+			List<Part> tanks = ASPStaging.findFuelTanks (parts);
 			List<Part> tanksToConnect = new List<Part> ();
 
 			// get list of tanks to connect
