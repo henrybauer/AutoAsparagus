@@ -464,6 +464,9 @@ namespace AutoAsparagus {
 						newReloadShip ();
 						mystate = ASPState.IDLE;
 						osd ("Done!");
+						#if DEBUG
+						tanks = ASPStaging.findFuelTanks (EditorLogic.fetch.ship.Parts);
+						#endif
 						break;
 					case ASPState.AFTERSTAGE:
 						newReloadShip ();
