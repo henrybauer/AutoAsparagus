@@ -816,8 +816,10 @@ getclosest of onionRing[2], wire up onionRing[2].Count/2 tanks, etc
 				ASPConsoleStuff.AAprint ("Onion ring: " + onionLevel.ToString ()+", "+orignalNumberOfTanks +" tanks");
 				if (orignalNumberOfTanks < 2) {
 					ASPConsoleStuff.AAprint ("Skipping ring because it has too few members");
+				#if DEBUG
 				} else if (onionLevel>AutoAsparagus.onionStop) {
 					ASPConsoleStuff.AAprint ("Skipping ring because we hit onionStop");
+				#endif
 				} else {
 					tanksToConnect = OnionRings [onionLevel];
 					Part nextTank = null;
