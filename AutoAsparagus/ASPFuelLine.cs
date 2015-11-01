@@ -562,6 +562,9 @@ namespace AutoAsparagus
 			// First parent is normally decoupler, second or beyond will be the central tank
 			// If first parent is tank, we want to ignore it anyway
 			// FIXME: what about stacked tanks?  tank -> tank -> decoupler -> tank -> tank -> tank
+			if (p == null) {
+				return null;
+			}
 			ASPConsoleStuff.printPart ("findParentFuelTank", p);
 			Part partToCheck = p.parent;
 			if (partToCheck == null) {
@@ -590,6 +593,10 @@ namespace AutoAsparagus
 			Part currentTank = startTank;
 			tanksToConnect.Remove (startTank);
 			ASPConsoleStuff.printPart ("=== makeFuelLineChain, starting at", currentTank);
+			if (currentTank == null) {
+				ASPConsoleStuff.print ("makeFuelLineChain passed a null part!");
+				return null;
+			}
 
 			// connect first part to parent fuel tank
 			Part parentTank = findParentFuelTank (currentTank);
@@ -699,11 +706,26 @@ namespace AutoAsparagus
 			Part currentPart = p;
 			while (currentPart != null) {
 				if (ASPStaging.isDecoupler(currentPart)) {
-					x = x + 1;
+					if (currentPart.parent != null) { // don't count a root decoupler as an actual decoupler
+						x = x + 1;
+					}
 				}
 				currentPart = currentPart.parent;
 			}
 			return x;
+		}
+
+		public static Part findCentralTank (Part p){
+			ASPConsoleStuff.printPart ("findCentralTank",p);
+			Part currentPart = p;
+			Part centralTank = null;
+			while (currentPart != null) {
+				if (ASPStaging.isFuelTank (currentPart)) {
+					centralTank = currentPart;
+				}
+				currentPart = currentPart.parent;
+			}
+			return centralTank;
 		}
 
 		public static void AddAsparagusFuelLines(AvailablePart ap, int textureNum, string texturePath, string textureDisplayName) {
@@ -765,12 +787,19 @@ getclosest of onionRing[2], wire up onionRing[2].Count/2 tanks, etc
 			int onionRingLevel = 0;
 			foreach (Part p in tanksToConnect) {
 				onionRingLevel = countDecouplersToRoot (p);
-				if (OnionRings.ContainsKey (onionRingLevel)) {
-					OnionRings [onionRingLevel].Add (p);
-				} else {
-					List<Part> foo = new List<Part> ();
-					foo.Add (p);
-					OnionRings.Add (onionRingLevel, foo);
+				if (onionRingLevel > 0) { // only connect tanks that can be decoupled
+					Part centralTank = findCentralTank(p);
+					ASPConsoleStuff.printPart ("onionRing part at level "+onionRingLevel.ToString(), p);
+					ASPConsoleStuff.printPart ("central tank", centralTank);
+					onionRingLevel = onionRingLevel + Math.Abs (centralTank.GetInstanceID ());
+					ASPConsoleStuff.AAprint ("new onionRingLevel: " + onionRingLevel.ToString ());
+					if (OnionRings.ContainsKey (onionRingLevel)) {
+						OnionRings [onionRingLevel].Add (p);
+					} else {
+						List<Part> foo = new List<Part> ();
+						foo.Add (p);
+						OnionRings.Add (onionRingLevel, foo);
+					}
 				}
 			}
 
@@ -802,11 +831,14 @@ getclosest of onionRing[2], wire up onionRing[2].Count/2 tanks, etc
 						}
 						if (nextTank == null) {
 							nextTank = findStartofChain (tanksToConnect, parts [0], ap.name);
+							if (nextTank == null) { // rut roh
+								break;
+							}
 						}
 						ASPConsoleStuff.printPart ("AddFuelLines: nextTank", nextTank);
 						ASPConsoleStuff.printPartList ("AddFuelLines: Tanks to connect", "tank", tanksToConnect);
 
-					nextTank = makeFuelLineChain (tanksToConnect, nextTank, ap, textureNum, texturePath, textureDisplayName, orignalNumberOfTanks);
+						nextTank = makeFuelLineChain (tanksToConnect, nextTank, ap, textureNum, texturePath, textureDisplayName, orignalNumberOfTanks);
 					}
 				}
 			}
