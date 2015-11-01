@@ -131,7 +131,11 @@ namespace AutoAsparagus
 
 		static public bool isConnectableFuelTank(Part p){
 			// If there are two tanks on top of each other, we don't want to connect both of them
-			return ((isFuelTank(p)) && (!isFuelTank(p.parent)));
+			if (p.parent == null) {
+				return (isFuelTank (p));
+			} else {
+				return ((isFuelTank (p)) && (!isFuelTank (p.parent)));
+			}
 		}
 
 		static public List<Part> findFuelTanks(List<Part> parts) {
