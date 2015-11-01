@@ -666,7 +666,7 @@ namespace AutoAsparagus {
 			GUILayout.BeginHorizontal();
 			string onionStopString = GUILayout.TextField(onionStop.ToString());
 			if (int.TryParse(onionStopString,out onionStop)) {
-				onionStop = Mathf.Clamp(onionStop,0,999);
+				onionStop = Mathf.Clamp(onionStop,0,999999);
 			}
 			GUILayout.EndHorizontal();
 
