@@ -579,7 +579,7 @@ namespace AutoAsparagus
 				if (partToCheck == null) {
 					return null;
 				}
-				if (ASPStaging.isFuelTank (partToCheck)) {
+				if (ASPStaging.isConnectableFuelTank (partToCheck)) {
 					return partToCheck;
 				}
 			}

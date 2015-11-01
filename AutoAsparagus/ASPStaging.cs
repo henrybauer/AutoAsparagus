@@ -129,12 +129,17 @@ namespace AutoAsparagus
 			return false;
 		}
 
+		static public bool isConnectableFuelTank(Part p){
+			// If there are two tanks on top of each other, we don't want to connect both of them
+			return ((isFuelTank(p)) && (!isFuelTank(p.parent)));
+		}
+
 		static public List<Part> findFuelTanks(List<Part> parts) {
 			List<Part> tanks = new List<Part>();
 			ASPConsoleStuff.AAprint ("=== Looking for fuel tanks");
 			foreach (Part p in parts) {
 				//if ((isFuelTank(p)) && (p.symmetryCounterparts.Count>0) && (!isFuelTank(p.parent))){
-				if ((isFuelTank(p)) && (!isFuelTank(p.parent))){
+				if (isConnectableFuelTank(p)){
 					ASPConsoleStuff.printPart ("Adding fuel tank", p);
 					tanks.Add (p);
 				}
