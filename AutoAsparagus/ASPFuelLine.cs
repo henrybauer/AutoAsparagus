@@ -791,7 +791,7 @@ getclosest of onionRing[2], wire up onionRing[2].Count/2 tanks, etc
 					Part centralTank = findCentralTank(p);
 					ASPConsoleStuff.printPart ("onionRing part at level "+onionRingLevel.ToString(), p);
 					ASPConsoleStuff.printPart ("central tank", centralTank);
-					onionRingLevel = onionRingLevel + Math.Abs (centralTank.GetInstanceID ());
+					onionRingLevel = onionRingLevel + 1000*Math.Abs (centralTank.GetInstanceID ());
 					ASPConsoleStuff.AAprint ("new onionRingLevel: " + onionRingLevel.ToString ());
 					if (OnionRings.ContainsKey (onionRingLevel)) {
 						OnionRings [onionRingLevel].Add (p);
