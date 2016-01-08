@@ -119,7 +119,6 @@ namespace AutoAsparagus {
 			//ASPUpdateCheck u = new ASPUpdateCheck (); // doesn't work?
 
 		}
-	
 
 		internal void setStyles() {
 			tooltipstyle = new GUIStyle(GUI.skin.box);
@@ -652,9 +651,7 @@ namespace AutoAsparagus {
 			if (Event.current.type == EventType.Repaint) { // why, Unity, why?
 				tooltip = GUI.tooltip;
 			}
-
 		}
-
 	}
 }
 
