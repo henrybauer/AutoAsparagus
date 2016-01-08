@@ -12,10 +12,7 @@ using KramaxReloadExtensions;
 // FIXME project-wide: change all parent/child checking to check grandparents/grandchildren if parent/child is a fuel tank (or anything except decoupler or fuel line)
 
 namespace AutoAsparagus {
-
-	//KSPAddon.Startup.EditorVAB
-	//KSPAddon.Startup.EveryScene
-	[KSPAddon(KSPAddon.Startup.EditorVAB, false)]
+	[KSPAddon(KSPAddon.Startup.EditorAny, false)]
 #if DEBUG
 	public class AutoAsparagus: ReloadableMonoBehaviour
 #else
