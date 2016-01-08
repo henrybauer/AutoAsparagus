@@ -34,7 +34,21 @@ namespace AutoAsparagus
 				ASPConsoleStuff.AAprint ("isDecoupler passed a null!");
 				return false;
 			}
-			return (p.name.ToLower ().Contains ("decoupler"));
+			if (p.name.ToLower ().Contains ("decoupler")) {
+				return true;
+			}
+			foreach (PartModule pm in p.Modules) {
+				if (pm.moduleName == "ModuleDecouple") {
+					return true;
+				}
+				if (pm.moduleName == "ModuleAnchoredDecoupler") {
+					return true;
+				}
+				if (pm.moduleName == "SSTUCustomRadialDecoupler") {
+					return true;
+				}
+			}
+			return false;
 		}
 
 		static public void stageChain(List<Part> chain){
