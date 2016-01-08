@@ -83,7 +83,6 @@ namespace AutoAsparagus {
 
 		#if DEBUG
 		List<Part> tanks = new List<Part>();
-		public static int onionStop = 99;
 		#endif
 
 		private static Texture2D loadTexture(string path) {
@@ -493,46 +492,15 @@ namespace AutoAsparagus {
 			}
 		}
 
-		private IEnumerator<object> reallyReloadShip(EditorLogic editor) {
-			yield return null; // Wait for next frame.
-			var shipCfg = editor.ship.SaveShip ();
-
-			forRealReloadShip(editor, shipCfg);
-		}
-
-		private void forRealReloadShip(EditorLogic editor, ConfigNode shipCfg){
-			// ship reloading routines are shamelessly stolen from SelectRoot: http://forum.kerbalspaceprogram.com/threads/43208-0-22-Oct17-SelectRoot-Set-a-new-root-part-0-22-fixes
-
-			editor.ship.Parts.ForEach(p => UnityEngine.Object.Destroy(p.gameObject));
-			editor.ship.Clear();
-
-			ShipConstruction.ShipConfig = shipCfg;
-			editor.ship.LoadShip(ShipConstruction.ShipConfig);
-			//EditorLogic.startPod = editor.ship.parts[0].localRoot;
-			//editor.SetHighlightRecursive(true, editor.ship);
-			editor.SetBackup();
-			var resetCrewFn = editor.GetType().GetMethod("ResetCrewAssignment", BindingFlags.NonPublic | BindingFlags.Instance);
-			resetCrewFn.Invoke(editor, new object[] { ShipConstruction.ShipConfig }); // I'm sorry, Squad :/
-			Staging.SortIcons();
-		}
-
-		private void ReloadShip(){
-			var editor = EditorLogic.fetch;
-			StartCoroutine (reallyReloadShip(editor));
-		}
-
 		private void newReloadShip(){
 			ASPConsoleStuff.AAprint ("newReloadShip() starting...");
 			EditorLogic editor = EditorLogic.fetch;
 			ConfigNode shipCfg = editor.ship.SaveShip ();
 
-			editor.ship.Parts.ForEach (p => UnityEngine.Object.Destroy (p.gameObject));
-			editor.ship.Clear ();
+			string filename = "saves/" + HighLogic.SaveFolder + "/Ships/VAB/AutoAsparagus.craft.hidden";
+			shipCfg.Save (filename);
+			EditorLogic.LoadShipFromFile (filename);
 
-			ShipConstruction.ShipConfig = shipCfg;
-			editor.ship.LoadShip (ShipConstruction.ShipConfig);
-			Staging.SortIcons ();
-			editor.SetBackup ();
 			ASPConsoleStuff.AAprint ("newReloadShip() done!");
 		}
 
@@ -641,7 +609,7 @@ namespace AutoAsparagus {
 
 			GUILayout.BeginHorizontal();
 			if (GUILayout.Button("DEV - Reload ship",buttonStyle)) {
-				ReloadShip();
+				newReloadShip();
 			}
 			GUILayout.EndHorizontal();
 
@@ -660,13 +628,6 @@ namespace AutoAsparagus {
 				for (int i = 1; i <= 20; i++) {
 					print ("");
 				}
-			}
-			GUILayout.EndHorizontal();
-
-			GUILayout.BeginHorizontal();
-			string onionStopString = GUILayout.TextField(onionStop.ToString());
-			if (int.TryParse(onionStopString,out onionStop)) {
-				onionStop = Mathf.Clamp(onionStop,0,999999);
 			}
 			GUILayout.EndHorizontal();
 
