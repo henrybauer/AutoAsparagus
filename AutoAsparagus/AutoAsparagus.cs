@@ -22,7 +22,7 @@ namespace AutoAsparagus {
 		private IButton aspButton;
 		private bool visible = false;
 
-		private Rect windowRect = new Rect(Screen.width * 0.35f,Screen.height * 0.1f,1,1);
+		private Rect windowRect = new Rect(0,0,1,1);
 		private float minwidth = 1;
 		private float minheight = 1;
 
@@ -46,7 +46,7 @@ namespace AutoAsparagus {
 		public static int launchClampsStage = 0;
 		public static bool stagesepratrons = true;
 		public static bool SmartStageAvailable = false;
-		public static bool useSmartStage = false;
+		public static bool useSmartStage = true;
 		public static bool useBlizzy = false;
 		private MethodInfo computeStagesMethod = null;
 
@@ -196,6 +196,13 @@ namespace AutoAsparagus {
 			#else
 			PluginConfiguration config = PluginConfiguration.CreateForType<AutoAsparagus> ();
 			config.SetValue ("useBlizzy", useBlizzy);
+			config.SetValue ("stageParachutes", stageParachutes);
+			config.SetValue ("stageLaunchClamps", stageLaunchClamps);
+			config.SetValue ("launchClampsStage", launchClampsStage);
+			config.SetValue ("stagesepratrons", stagesepratrons);
+			config.SetValue ("useSmartStage", useSmartStage);
+			config.SetValue ("windowRectX", (int)windowRect.x);
+			config.SetValue ("windowRectY", (int)windowRect.y);
 			config.save ();
 			#endif
 		}
@@ -211,9 +218,18 @@ namespace AutoAsparagus {
 			PluginConfiguration config = PluginConfiguration.CreateForType<AutoAsparagus> ();
 			config.load ();
 			useBlizzy = config.GetValue<bool> ("useBlizzy");
+			stageParachutes = config.GetValue<bool> ("stageParachutes");
+			stageLaunchClamps = config.GetValue<bool> ("stageLaunchClamps");
+			launchClampsStage = config.GetValue<int> ("launchClampsStage");
+			stagesepratrons = config.GetValue<bool> ("stagesepratrons");
+			useSmartStage = config.GetValue<bool> ("useSmartStage");
+			windowRect.x = (float)config.GetValue<int> ("windowRectX");
+			windowRect.y = (float)config.GetValue<int> ("windowRectY");
+			if ((windowRect.x==0) && (windowRect.y==0)) {
+				windowRect.x = Screen.width * 0.35f;
+				windowRect.y = Screen.height * 0.1f;
+			}
 			#endif
-
-			setupAppButton ();
 
 			ASPConsoleStuff.AAprint("Setting up toolbar");
 			if (ToolbarManager.ToolbarAvailable) {
@@ -228,10 +244,14 @@ namespace AutoAsparagus {
 						appOnTrue();
 					}
 				};
+				aspButton.Visible = useBlizzy;
 			} else {
 				aspButton = null;
 				useBlizzy = false;
 			}
+
+			//setup app launcher after toolbar in case useBlizzy=true but user removed toolbar
+			setupAppButton ();
 		}
 
 		// Called after Awake()
@@ -259,7 +279,6 @@ namespace AutoAsparagus {
 				}
 				smartstageTexture = loadTexture ("SmartStage/SmartStage38");
 				SmartStageAvailable = true;
-				useSmartStage = true;
 			}
 			versionString = Assembly.GetCallingAssembly().GetName().Version.ToString();
 		}
@@ -525,13 +544,13 @@ namespace AutoAsparagus {
 						}
 						break;
 					case ASPState.SMARTSTAGE:
-						osd ("Invoking SmartStage...");
 						mystate = ASPState.IDLE;
 						try {
 							computeStagesMethod.Invoke (null, new object[] { });
 						} catch (Exception e) {
 							UnityEngine.Debug.LogError ("Error invoking method\n" + e.StackTrace);
 						}
+						osd ("Done!");
 						break;
 					}
 				}
