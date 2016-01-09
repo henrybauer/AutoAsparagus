@@ -39,6 +39,7 @@ namespace AutoAsparagus {
 		private static Texture2D launchclampTexture = null;
 		private static Texture2D sepratronTexture = null;
 		private static Texture2D smartstageTexture = null;
+		private static Texture2D blizzyTexture = null;
 
 		public static bool stageParachutes = false;
 		public static bool stageLaunchClamps = false;
@@ -178,13 +179,29 @@ namespace AutoAsparagus {
 				aspButton.Destroy ();
 			}
 			ApplicationLauncher.Instance.RemoveModApplication (appButton);
+
+			#if DEBUG
+			// don't save configs because KramaxReload screws up PluginConfiguration
+			#else
+			PluginConfiguration config = PluginConfiguration.CreateForType<AutoAsparagus> ();
+			config.SetValue ("useBlizzy", useBlizzy);
+			config.save ();
+			#endif
 		}
 
 		// Called after the scene is loaded.
 		public void Awake() {
-			//RenderingManager.AddToPostDrawQueue(0, OnDraw);
+
 			ASPConsoleStuff.AAprint ("Awake()");
-			//GameEvents.onGUIApplicationLauncherReady.Add(setupAppButton);
+
+			#if DEBUG
+			// don't load configs because KramaxReload screws up PluginConfiguration
+			#else
+			PluginConfiguration config = PluginConfiguration.CreateForType<AutoAsparagus> ();
+			config.load ();
+			useBlizzy = config.GetValue<bool> ("useBlizzy");
+			#endif
+
 			setupAppButton ();
 
 			ASPConsoleStuff.AAprint("Setting up toolbar");
@@ -194,7 +211,11 @@ namespace AutoAsparagus {
 				aspButton.ToolTip = "AutoAsparagus";
 				aspButton.Visibility = new GameScenesVisibility (GameScenes.EDITOR);
 				aspButton.OnClick += (e) => {
-					visible = !visible;
+					if (visible) {
+						appOnFalse();
+					} else {
+						appOnTrue();
+					}
 				};
 			} else {
 				aspButton = null;
@@ -211,6 +232,7 @@ namespace AutoAsparagus {
 			parachuteTexture = loadTexture ("AutoAsparagus/parachute");
 			//strutTexture = loadTexture ("AutoAsparagus/strut");
 			sepratronTexture = loadTexture ("AutoAsparagus/sepratron");
+			blizzyTexture = loadTexture ("AutoAsparagus/blizzy");
 
 			AssemblyLoader.LoadedAssembly SmartStage = AssemblyLoader.loadedAssemblies.SingleOrDefault(a => a.dllName == "SmartStage");
 			if (SmartStage != null)
@@ -608,13 +630,16 @@ namespace AutoAsparagus {
 
 			if (aspButton != null) {
 				GUILayout.BeginHorizontal();
-				useBlizzy = GUILayout.Toggle (useBlizzy, new GUIContent(" Use Blizzy's toolbar", "Use Blizzy's toolbar instead of the AppLauncher"), togglestyle);
+				useBlizzy = GUILayout.Toggle (useBlizzy, new GUIContent(" Use Blizzy's toolbar", blizzyTexture, "Use Blizzy's toolbar instead of the AppLauncher"), togglestyle);
 				GUILayout.EndHorizontal();
 			}
+
 			if (useBlizzy) {
 				appButton.VisibleInScenes = ApplicationLauncher.AppScenes.NEVER;
+				aspButton.Visible = true;
 			} else {
 				appButton.VisibleInScenes = ApplicationLauncher.AppScenes.VAB | ApplicationLauncher.AppScenes.SPH;
+				aspButton.Visible = false;
 			}
 
 #if DEBUG
