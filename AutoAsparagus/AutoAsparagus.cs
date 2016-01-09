@@ -54,6 +54,7 @@ namespace AutoAsparagus {
 		private GUIStyle buttonStyle = null;
 		private GUIStyle picbutton = null;
 		private GUIStyle togglestyle = null;
+		private GUIStyle gridstyle = null;
 		private GUIStyle labelstyle = null;
 		private GUIStyle osdstyle = null;
 
@@ -71,9 +72,10 @@ namespace AutoAsparagus {
 
 		public int partToUseIndex = 0;
 		public List<AvailablePart> partsWeCanUse;
-		GUIContent[] partGrid;
-		string[][] partTexturePaths; //yes, an array of arrays
-		string[][] partTextureNames; //yes, an array of arrays
+		private GUIContent[] partGrid;
+		private string[][] partTexturePaths; //yes, an array of arrays
+		private string[][] partTextureNames; //yes, an array of arrays
+		private static Texture2D[][] partTextures; //yes, an array of arrays
 		public int textureIndex = 0 ;
 
 		#if DEBUG
@@ -153,6 +155,17 @@ namespace AutoAsparagus {
 			togglestyle.alignment = TextAnchor.MiddleLeft;
 			togglestyle.stretchHeight = false;
 			togglestyle.stretchWidth = false;
+			togglestyle.fixedHeight = 20;
+
+			gridstyle = new GUIStyle (GUI.skin.toggle);
+			gridstyle.wordWrap = false;
+			gridstyle.fontStyle = FontStyle.Normal;
+			gridstyle.normal.textColor = Color.white;
+			gridstyle.alignment = TextAnchor.MiddleLeft;
+			gridstyle.stretchHeight = false;
+			gridstyle.stretchWidth = false;
+			gridstyle.fixedHeight = 20;
+			gridstyle.fixedWidth = 100;
 
 			labelstyle = new GUIStyle (GUI.skin.label);
 			labelstyle.wordWrap = false;
@@ -298,6 +311,7 @@ namespace AutoAsparagus {
 				partGrid = new GUIContent[partsWeCanUse.Count()];
 				partTexturePaths = new string[partsWeCanUse.Count ()][];
 				partTextureNames = new string[partsWeCanUse.Count ()][];
+				partTextures = new Texture2D[partsWeCanUse.Count ()][];
 				int x = 0;
 
 				foreach (AvailablePart ap in partsWeCanUse) {
@@ -316,6 +330,23 @@ namespace AutoAsparagus {
 							string textures = pm.GetType ().GetField ("textureNames").GetValue (pm).ToString();
 							ASPConsoleStuff.AAprint ("Textures (path): "+textures);
 							partTexturePaths[x] = textures.Split(sep, StringSplitOptions.RemoveEmptyEntries);
+							int numTextures = partTexturePaths [x].Count ();
+							partTextures [x] = new Texture2D[numTextures];
+							for (int i = 0; i < numTextures; i++) {
+								ASPConsoleStuff.AAprint ("Texture path: ["+partTexturePaths [x][i]+"]");
+								partTextures [x][i] = loadTexture (partTexturePaths [x][i]);
+								if ((partTextures [x] [i].height > 20) || (partTextures [x] [i].width > 20)) {
+									int newWidth = partTextures [x] [i].width;
+									int newHeight = partTextures [x] [i].height;
+									if (partTextures [x] [i].height > partTextures [x] [i].width) {
+										newHeight = 20;
+										newWidth = partTextures [x] [i].width * (partTextures [x] [i].height / 20);
+									} else {
+										newHeight = partTextures [x] [i].height * (partTextures [x] [i].width / 20);
+										newWidth = 20;
+									}
+								}
+							}
 
 							string textureDisplayNames = pm.GetType ().GetField ("textureDisplayNames").GetValue (pm).ToString();
 							ASPConsoleStuff.AAprint ("Textures (display name): "+textureDisplayNames);
@@ -569,10 +600,16 @@ namespace AutoAsparagus {
 			if (partTextureNames [partToUseIndex] != null) {
 				GUILayout.BeginHorizontal ();
 				GUILayout.BeginVertical ();
-				GUILayout.Label ("Texture:");
+				GUILayout.Label ("Texture:", labelstyle);
 				GUILayout.EndVertical ();
 				GUILayout.BeginVertical ();
-				textureIndex = GUILayout.SelectionGrid (textureIndex, partTextureNames[partToUseIndex], 2, togglestyle);
+				int numTextures = partTextureNames [partToUseIndex].Count ();
+				GUIContent[] texSelect = new GUIContent[numTextures];
+				for (int i = 0; i < numTextures; i++) {
+					texSelect [i] = new GUIContent (partTextureNames [partToUseIndex][i], partTextures [partToUseIndex][i]);
+				}
+				textureIndex = GUILayout.SelectionGrid(textureIndex, texSelect, 2, gridstyle);
+				//textureIndex = GUILayout.SelectionGrid(textureIndex, partTextureNames[partToUseIndex], 2, togglestyle);
 				GUILayout.EndVertical ();
 				GUILayout.EndHorizontal ();
 			}
