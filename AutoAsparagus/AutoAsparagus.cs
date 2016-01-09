@@ -34,7 +34,6 @@ namespace AutoAsparagus {
 		private static Texture2D appTexture = null;
 		private static Texture2D onionTexture = null;
 		private static Texture2D nofuelTexture = null;
-		//private static Texture2D strutTexture = null;
 		private static Texture2D parachuteTexture = null;
 		private static Texture2D launchclampTexture = null;
 		private static Texture2D sepratronTexture = null;
@@ -45,7 +44,6 @@ namespace AutoAsparagus {
 		public static bool stageLaunchClamps = false;
 		private static string[] launchClampsText = new string[] {"... in bottom stage", "... in next-to-bottom stage"};
 		public static int launchClampsStage = 0;
-		public static bool addStruts = false;
 		public static bool stagesepratrons = true;
 		public static bool SmartStageAvailable = false;
 		public static bool useSmartStage = false;
@@ -596,12 +594,6 @@ namespace AutoAsparagus {
 				GUILayout.BeginHorizontal ();
 				stagesepratrons = GUILayout.Toggle (stagesepratrons, new GUIContent (" Stage sepratrons", sepratronTexture, "Stage sepratrons to fire with decouplers"), togglestyle);
 				GUILayout.EndHorizontal ();
-
-			/* not yet, but soon!
-			GUILayout.BeginHorizontal();
-			addStruts = GUILayout.Toggle (addStruts, new GUIContent(" Add struts", strutTexture, "Add struts along with fuel lines"), togglestyle);
-			GUILayout.EndHorizontal();
-			*/
 
 				if (!stageLaunchClamps) {
 					minheight = windowRect.height;
