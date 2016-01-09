@@ -33,9 +33,7 @@ namespace AutoAsparagus {
 		private static Texture2D aspTexture = null;
 		private static Texture2D appTexture = null;
 		private static Texture2D onionTexture = null;
-		private static Texture2D fuelTexture = null;
 		private static Texture2D nofuelTexture = null;
-		private static Texture2D strutTexture = null;
 		private static Texture2D parachuteTexture = null;
 		private static Texture2D launchclampTexture = null;
 		private static Texture2D sepratronTexture = null;
@@ -240,11 +238,10 @@ namespace AutoAsparagus {
 		public void Start() {
 			aspTexture = loadTexture ("AutoAsparagus/asparagus");
 			onionTexture = loadTexture ("AutoAsparagus/onion");
-			fuelTexture = loadTexture ("AutoAsparagus/fuel");
 			nofuelTexture = loadTexture ("AutoAsparagus/nofuel");
 			launchclampTexture = loadTexture ("AutoAsparagus/launchclamp");
 			parachuteTexture = loadTexture ("AutoAsparagus/parachute");
-			strutTexture = loadTexture ("AutoAsparagus/strut");
+			//strutTexture = loadTexture ("AutoAsparagus/strut");
 			sepratronTexture = loadTexture ("AutoAsparagus/sepratron");
 			blizzyTexture = loadTexture ("AutoAsparagus/blizzy");
 
@@ -312,19 +309,7 @@ namespace AutoAsparagus {
 
 				foreach (AvailablePart ap in partsWeCanUse) {
 					// how do I turn ap.iconPrefab into a Texture??
-
-					switch (ap.name) {
-					case "strutConnector":
-						partGrid [x] = new GUIContent (ap.title, strutTexture, ap.name);
-						break;
-					case "fuelLine":
-						partGrid [x] = new GUIContent (ap.title, fuelTexture, ap.name);
-						break;
-					default:
-						partGrid [x] = new GUIContent (ap.title, ap.name);
-						break;
-					}
-
+					partGrid [x] = new GUIContent (ap.title, ap.name);
 					ASPConsoleStuff.AAprint ("partGrid[" + x.ToString () + "]: " + ap.title);
 
 					Part p = ap.partPrefab;
