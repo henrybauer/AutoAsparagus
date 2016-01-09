@@ -296,17 +296,10 @@ namespace AutoAsparagus {
 				foreach (AvailablePart ap in PartLoader.LoadedPartsList) {
 					Part p = ap.partPrefab;
 					if (p is CompoundPart) {
-						if (partResearched(ap)) {
+						if (partResearched (ap)) {
 							partsWeCanUse.Add (ap);
-						}
-						/*					foreach (PartModule pm in p.Modules){
-						ASPConsoleStuff.AAprint ("module name: " + pm.moduleName);
-						if (pm.moduleName == "CModuleFuelLine") {
-							partsWeCanUse.Add (ap);
-							ASPConsoleStuff.printPart ("Fuel line part:", p);
 						}
 					}
-*/				}
 				}
 				partGrid = new GUIContent[partsWeCanUse.Count()];
 				partTexturePaths = new string[partsWeCanUse.Count ()][];
