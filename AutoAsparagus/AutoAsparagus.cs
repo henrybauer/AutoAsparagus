@@ -565,6 +565,7 @@ namespace AutoAsparagus {
 			string filename = "saves/" + HighLogic.SaveFolder + "/Ships/VAB/AutoAsparagus.craft.hidden";
 			shipCfg.Save (filename);
 			EditorLogic.LoadShipFromFile (filename);
+			EditorLogic.fetch.SetBackup ();
 
 			ASPConsoleStuff.AAprint ("newReloadShip() done!");
 		}
