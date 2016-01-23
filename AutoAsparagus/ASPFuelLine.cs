@@ -161,6 +161,8 @@ namespace AutoAsparagus
 			Vector3 destPosition = new Vector3 ();
 			getStartDestPositions (sourceTank, destTank, midway, out startPosition, out destPosition);
 
+			Vector3 midPosition = Vector3.Lerp (startPosition, destPosition, 0.5f);
+
 			EditorLogic editor = EditorLogic.fetch;
 			ShipConstruct ship = editor.ship;
 			List<Part> parts = ship.parts;
@@ -175,7 +177,12 @@ namespace AutoAsparagus
 					//ASPConsoleStuff.printPart ("**** fuel line is obstructed at "+collisionpoint.ToString("F2")+" by", p);
 					return true;
 				}
-
+				if (p.collider.bounds.Contains (midPosition)) {
+					#if DEBUG
+					ASPConsoleStuff.printPart ("**** fuel line is obstructed (midPosition) at "+collisionpoint.ToString("F2")+" by", p);
+					#endif
+					return true;
+				}
 			}
 
 			List<Vector3> barrelStart = new List<Vector3>();
@@ -211,6 +218,13 @@ namespace AutoAsparagus
 					foreach (Vector3 barrelDestPos in barrelDest) {
 						if (fireRayAt (p, barrelStartPos, barrelDestPos, out collisionpoint)) {
 							//ASPConsoleStuff.printPart ("**** fuel line barrel is obstructed at "+collisionpoint.ToString("F2")+" by", p);
+							return true;
+						}
+						midPosition = Vector3.Lerp (barrelStartPos, barrelDestPos, 0.5f);
+						if (p.collider.bounds.Contains (midPosition)) {
+							#if DEBUG
+							ASPConsoleStuff.printPart ("**** fuel line is obstructed (barrel midPosition) at "+collisionpoint.ToString("F2")+" by", p);
+							#endif
 							return true;
 						}
 					}
@@ -429,7 +443,14 @@ namespace AutoAsparagus
 				AutoAsparagus.osd ("Failed to find unobstructed path for fuel line!");
 				ASPConsoleStuff.printPart ("Failed to find unobstructed path between", sourceTank);
 				ASPConsoleStuff.printPart ("... and", destTank);
-				AutoAsparagus.mystate = AutoAsparagus.ASPState.IDLE;
+
+				AutoAsparagus.badStartTank = sourceTank;
+				AutoAsparagus.badDestTank = destTank;
+
+				fuelSetsToConnect = new List<FuelSet>();
+
+				AutoAsparagus.mystate = AutoAsparagus.ASPState.ERROR;
+				return;
 			}
 			ASPConsoleStuff.printVector3 ("New midway is", midway);
 			getStartDestPositions (sourceTank, destTank, midway, out startPosition, out destPosition);
@@ -575,7 +596,7 @@ namespace AutoAsparagus
 				safetyfactor = safetyfactor - 1;
 				if (safetyfactor == 0) {
 					AutoAsparagus.osd ("Infinite loop in findParentFuelTank(), aborting :(");
-					AutoAsparagus.mystate = AutoAsparagus.ASPState.IDLE;
+					AutoAsparagus.mystate = AutoAsparagus.ASPState.ERROR;
 					return null;
 				}
 				partToCheck = partToCheck.parent;
@@ -645,7 +666,7 @@ namespace AutoAsparagus
 				safetyfactor = safetyfactor - 1;
 				if (safetyfactor == 0) {
 					AutoAsparagus.osd ("Infinite loop in makeFuelLineChain, aborting :(");
-					AutoAsparagus.mystate = AutoAsparagus.ASPState.IDLE;
+					AutoAsparagus.mystate = AutoAsparagus.ASPState.ERROR;
 					return null;
 				}
 
@@ -681,7 +702,7 @@ namespace AutoAsparagus
 				safetyfactor = safetyfactor - 1;
 				if (safetyfactor == 0) {
 					AutoAsparagus.osd ("Infinite loop in findStartofChain, aborting :(");
-					AutoAsparagus.mystate = AutoAsparagus.ASPState.IDLE;
+					AutoAsparagus.mystate = AutoAsparagus.ASPState.ERROR;
 					return null;
 				}
 				List<Part> newchildren = new List<Part>();
@@ -730,10 +751,14 @@ namespace AutoAsparagus
 
 		public static void AddAsparagusFuelLines(AvailablePart ap, int textureNum, string texturePath, string textureDisplayName) {
 			ASPConsoleStuff.AAprint ("=== AddAsparagusFuelLines ===");
+			AutoAsparagus.badStartTank = null;
+			AutoAsparagus.badDestTank = null;
+
 			// Get all the parts of the ship
 			EditorLogic editor = EditorLogic.fetch;
 			ShipConstruct ship = editor.ship;
 			List<Part> parts = ship.parts;
+			parts [0].SetHighlight (false, true);
 
 			// start a new list of fuel lines to connect
 			//fuelSetsToConnect = new List<FuelSet>();
@@ -748,7 +773,7 @@ namespace AutoAsparagus
 				safetyfactor = safetyfactor - 1;
 				if (safetyfactor == 0) {
 					AutoAsparagus.osd ("Infinite loop in AddFuelLines:tanks.Count, aborting :(");
-					AutoAsparagus.mystate = AutoAsparagus.ASPState.IDLE;
+					AutoAsparagus.mystate = AutoAsparagus.ASPState.ERROR;
 					return;
 				}
 				Part p = tanks [0];
@@ -824,7 +849,7 @@ getclosest of onionRing[2], wire up onionRing[2].Count/2 tanks, etc
 						safetyfactor = safetyfactor - 1;
 						if (safetyfactor == 0) {
 							AutoAsparagus.osd ("Infinite loop in AddFuelLines:tanksToConnect.Count, aborting :(");
-							AutoAsparagus.mystate = AutoAsparagus.ASPState.IDLE;
+							AutoAsparagus.mystate = AutoAsparagus.ASPState.ERROR;
 							return;
 						}
 						if (nextTank == null) {
@@ -898,10 +923,13 @@ getclosest of onionRing[2], wire up onionRing[2].Count/2 tanks, etc
 
 		public static void AddOnionFuelLines(AvailablePart ap, int textureNum, string texturePath, string textureDisplayName) {
 			ASPConsoleStuff.AAprint ("=== AddOnionFuelLines ===");
+			AutoAsparagus.badStartTank = null;
+			AutoAsparagus.badDestTank = null;
 			// Get all the parts of the ship
 			EditorLogic editor = EditorLogic.fetch;
 			ShipConstruct ship = editor.ship;
 			List<Part> parts = ship.parts;
+			parts [0].SetHighlight (false, true);
 
 			// start a new list of fuel lines to connect
 			//fuelSetsToConnect = new List<FuelSet>();
@@ -916,7 +944,7 @@ getclosest of onionRing[2], wire up onionRing[2].Count/2 tanks, etc
 				safetyfactor = safetyfactor - 1;
 				if (safetyfactor == 0) {
 					AutoAsparagus.osd ("Infinite loop in AddOnionFuelLines:tanks.Count, aborting :(");
-					AutoAsparagus.mystate = AutoAsparagus.ASPState.IDLE;
+					AutoAsparagus.mystate = AutoAsparagus.ASPState.ERROR;
 					return;
 				}
 				Part p = tanks [0];
@@ -938,7 +966,7 @@ getclosest of onionRing[2], wire up onionRing[2].Count/2 tanks, etc
 				safetyfactor = safetyfactor - 1;
 				if (safetyfactor == 0) {
 					AutoAsparagus.osd ("Infinite loop in AddOnionFuelLines:tankstoConnect.Count, aborting :(");
-					AutoAsparagus.mystate = AutoAsparagus.ASPState.IDLE;
+					AutoAsparagus.mystate = AutoAsparagus.ASPState.ERROR;
 					return;
 				}
 				ASPConsoleStuff.printPartList ("Tanks to connect", "tank", tanksToConnect);
@@ -975,13 +1003,15 @@ getclosest of onionRing[2], wire up onionRing[2].Count/2 tanks, etc
 				safetyfactor = safetyfactor - 1;
 				if (safetyfactor == 0) {
 				AutoAsparagus.osd ("Infinite loop in DeleteAllFuelLines:partsToDelete.Count, aborting :(");
-					AutoAsparagus.mystate = AutoAsparagus.ASPState.IDLE;
+					AutoAsparagus.mystate = AutoAsparagus.ASPState.ERROR;
 					return count;
 				}
 				Part p = partsToDelete [0];
 				ASPConsoleStuff.printPart ("Deleting part", p);
 				Part parent = p.parent;
-				parent.removeChild (p);
+				if (parent != null) {
+					parent.removeChild (p);
+				}
 				parts.Remove (p);
 				partsToDelete.Remove (p);
 				count = count + 1;

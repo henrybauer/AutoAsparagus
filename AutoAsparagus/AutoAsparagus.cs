@@ -26,7 +26,7 @@ namespace AutoAsparagus {
 		private float minwidth = 1;
 		private float minheight = 1;
 
-		public enum ASPState { IDLE, ADDASP, ADDONION, CONNECT, AFTERCONNECT, ADDSTAGES, STAGE, RELOAD, DELETEFUEL, FINALREFRESH, AFTERSTAGE, CLAMPS, SMARTSTAGE };
+		public enum ASPState { ERROR, IDLE, ADDASP, ADDONION, CONNECT, AFTERCONNECT, ADDSTAGES, STAGE, RELOAD, DELETEFUEL, FINALREFRESH, AFTERSTAGE, CLAMPS, SMARTSTAGE };
 		public static ASPState mystate = ASPState.IDLE;
 		private int refreshwait = 0;
 
@@ -77,6 +77,9 @@ namespace AutoAsparagus {
 		private string[][] partTextureNames; //yes, an array of arrays
 		private static Texture2D[][] partTextures; //yes, an array of arrays
 		public int textureIndex = 0 ;
+
+		public static Part badStartTank = null;
+		public static Part badDestTank = null;
 
 		#if DEBUG
 		List<Part> tanks = new List<Part>();
@@ -376,6 +379,10 @@ namespace AutoAsparagus {
 
 		public void appOnFalse() {
 			visible = false;
+			EditorLogic editor = EditorLogic.fetch;
+			ShipConstruct ship = editor.ship;
+			List<Part> parts = ship.parts;
+			parts [0].SetHighlight (false, true);
 		}
 
 
@@ -416,19 +423,30 @@ namespace AutoAsparagus {
 
 						#if DEBUG
 						// draw labels on the tanks
-						if (tanks == null ){
+						if (tanks == null) {
 							tanks = ASPStaging.findFuelTanks (EditorLogic.fetch.ship.Parts);
 						} else {
 							foreach (Part p in tanks) {
-								if (p!=null){
-									Vector3 position = Camera.main.WorldToScreenPoint(p.transform.position);
-									GUI.Label(new Rect(position.x, Screen.height-position.y,200,30),ASPConsoleStuff.getFriendlyName(p.GetInstanceID().ToString()));
+								if (p != null) {
+									Vector3 position = Camera.main.WorldToScreenPoint (p.transform.position);
+									GUI.Label (new Rect (position.x, Screen.height - position.y, 200, 30), ASPConsoleStuff.getFriendlyName (p.GetInstanceID ().ToString ()));
 								}
 							}
 						}
 						#endif
+						if ((badStartTank != null) && (badDestTank != null)) {
+							Part p = badStartTank;
+							Vector3 position = Camera.main.WorldToScreenPoint (p.transform.position);
+							GUI.Label (new Rect (position.x, Screen.height - position.y, 200, 30), "Source: "+p.GetInstanceID().ToString()+" ("+ASPConsoleStuff.getFriendlyName (p.GetInstanceID ().ToString ())+")");
 
-						windowRect = clampToScreen (GUILayout.Window (windowID, windowRect, OnWindow, "AutoAsparagus "+versionString));
+							p = badDestTank;
+							position = Camera.main.WorldToScreenPoint (p.transform.position);
+							GUI.Label (new Rect (position.x, Screen.height - position.y, 200, 30), "Destination: "+p.GetInstanceID().ToString()+" ("+ASPConsoleStuff.getFriendlyName (p.GetInstanceID ().ToString ())+")");
+
+						}
+
+
+						windowRect = GUILayout.Window (windowID, clampToScreen (windowRect), OnWindow, "AutoAsparagus " + versionString);
 
 						mousepos = new Vector2 (Input.mousePosition.x, Input.mousePosition.y);
 
@@ -444,7 +462,7 @@ namespace AutoAsparagus {
 							}
 						}
 
-						if (tooltip != "") {
+						if ((tooltip!=null) && (tooltip.Length>0)) {
 							GUI.depth = 0;
 							Vector2 size = tooltipstyle.CalcSize (new GUIContent (tooltip));
 							Rect rect = new Rect (Input.mousePosition.x + 20, (Screen.height - Input.mousePosition.y) + 20, size.x, size.y);
@@ -455,6 +473,9 @@ namespace AutoAsparagus {
 						}
 
 						break;
+					case ASPState.ERROR:
+						mystate = ASPState.IDLE;
+						break;
 					case ASPState.ADDASP:
 						ASPConsoleStuff.ListTheShip ();
 						if (partTexturePaths [partToUseIndex] != null) {
@@ -462,9 +483,11 @@ namespace AutoAsparagus {
 							texturePath = partTexturePaths [partToUseIndex] [textureIndex];
 							textureName = partTextureNames [partToUseIndex] [textureIndex];
 						}
-						ASPFuelLine.AddAsparagusFuelLines (partsWeCanUse [partToUseIndex], textureNum, texturePath, textureName);
 						mystate = ASPState.CONNECT;
-						osd("Connecting parts...");
+						ASPFuelLine.AddAsparagusFuelLines (partsWeCanUse [partToUseIndex], textureNum, texturePath, textureName);
+						if (mystate == ASPState.CONNECT) {
+							osd ("Connecting parts...");
+						}
 						refreshwait = 100;
 						break;
 					case ASPState.ADDONION:
@@ -474,9 +497,11 @@ namespace AutoAsparagus {
 							texturePath = partTexturePaths [partToUseIndex] [textureIndex];
 							textureName = partTextureNames [partToUseIndex] [textureIndex];
 						}
-						ASPFuelLine.AddOnionFuelLines (partsWeCanUse[partToUseIndex], textureNum, texturePath, textureName);
 						mystate = ASPState.CONNECT;
-						osd("Connecting parts...");
+						ASPFuelLine.AddOnionFuelLines (partsWeCanUse[partToUseIndex], textureNum, texturePath, textureName);
+						if (mystate == ASPState.CONNECT) {
+							osd ("Connecting parts...");
+						}
 						refreshwait = 100;
 						break;
 					case ASPState.CONNECT:
@@ -553,6 +578,17 @@ namespace AutoAsparagus {
 						osd ("Done!");
 						break;
 					}
+				}
+
+				if ((badStartTank != null) && (badDestTank != null)) {
+					badStartTank.SetHighlightColor (Color.red);
+					badStartTank.SetHighlight (true, false);
+					badStartTank.highlightType = Part.HighlightType.AlwaysOn;
+
+					badDestTank.SetHighlightColor (Color.red);
+					badDestTank.SetHighlight (true, false);
+					badDestTank.highlightType = Part.HighlightType.AlwaysOn;
+
 				}
 			}
 		}
@@ -674,14 +710,13 @@ namespace AutoAsparagus {
 				GUILayout.BeginHorizontal();
 				useBlizzy = GUILayout.Toggle (useBlizzy, new GUIContent(" Use Blizzy's toolbar", blizzyTexture, "Use Blizzy's toolbar instead of the AppLauncher"), togglestyle);
 				GUILayout.EndHorizontal();
+				aspButton.Visible = useBlizzy;
 			}
 
 			if (useBlizzy) {
 				appButton.VisibleInScenes = ApplicationLauncher.AppScenes.NEVER;
-				aspButton.Visible = true;
 			} else {
 				appButton.VisibleInScenes = ApplicationLauncher.AppScenes.VAB | ApplicationLauncher.AppScenes.SPH;
-				aspButton.Visible = false;
 			}
 
 #if DEBUG
