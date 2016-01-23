@@ -158,7 +158,7 @@ namespace AutoAsparagus {
 			togglestyle.alignment = TextAnchor.MiddleLeft;
 			togglestyle.stretchHeight = false;
 			togglestyle.stretchWidth = false;
-			togglestyle.fixedHeight = 20;
+			//togglestyle.fixedHeight = 20;
 
 			gridstyle = new GUIStyle (GUI.skin.toggle);
 			gridstyle.wordWrap = false;
@@ -330,8 +330,12 @@ namespace AutoAsparagus {
 				int x = 0;
 
 				foreach (AvailablePart ap in partsWeCanUse) {
-					// how do I turn ap.iconPrefab into a Texture??
-					partGrid [x] = new GUIContent (ap.title, ap.name);
+					// Thanks to xEvilReeperx for the icon code!
+					// http://forum.kerbalspaceprogram.com/index.php?/topic/7542-the-official-unoffical-quothelp-a-fellow-plugin-developerquot-thread/&do=findComment&comment=2355711
+					Texture2D xEvilReeperxRules = PartIconGenerator.Create2D (ap, 32, 32,
+						Quaternion.AngleAxis (-15f, Vector3.right) * Quaternion.AngleAxis (-30f, Vector3.up), Color.clear);
+					partGrid [x] = new GUIContent (" "+ap.title,xEvilReeperxRules,ap.title+" ("+ap.name+")");
+
 					ASPConsoleStuff.AAprint ("partGrid[" + x.ToString () + "]: " + ap.title);
 
 					Part p = ap.partPrefab;
@@ -397,6 +401,175 @@ namespace AutoAsparagus {
 		public static void osd(string message){
 			osdmessage = message;
 			osdtime = Time.time + 3.0f;
+		}
+
+		private const int IconWidth = 256;
+		private const int IconHeight = 256;
+
+		public static class PartIconGenerator
+		{
+			private const string IconHiddenTag = "Icon_Hidden";
+			private const string KerbalEvaSubstring = "kerbal";
+
+			private static readonly int GameObjectLayer = LayerMask.NameToLayer("PartsList_Icons"); // note to future: if creating icons inside editor, you might want to choose a different layer or translate the camera and object out of frame
+
+			private static Camera CreateCamera(int pixelWidth, int pixelHeight, Color backgroundColor)
+			{
+				var camGo = new GameObject("PartIconGenerator.Camera", typeof (Camera));
+				var cam = camGo.camera;
+
+				cam.enabled = false;
+				cam.cullingMask = (1 << GameObjectLayer);
+				cam.clearFlags = ~CameraClearFlags.Nothing;
+				cam.nearClipPlane = 0.1f;
+				cam.farClipPlane = 10f;
+				cam.orthographic = true;
+				cam.backgroundColor = backgroundColor;
+				cam.aspect = pixelWidth / (float) pixelHeight;
+
+				// Camera Size = x / ((( x / y ) * 2 ) * s )
+				cam.orthographicSize = pixelWidth / (((pixelWidth / (float) pixelHeight) * 2f) * pixelHeight);
+				cam.pixelRect = new Rect(0f, 0f, pixelWidth, pixelHeight);
+
+				return cam;
+			}
+
+			private static Light CreateLight()
+			{
+				var light = new GameObject("PartIconGenerator.Light").AddComponent<Light>();
+
+				light.type = LightType.Directional;
+				light.color = XKCDColors.OffWhite;
+				light.cullingMask = 1 << GameObjectLayer;
+				light.intensity = 0.1f;
+
+				return light;
+			}
+
+			private static GameObject CreateIcon(AvailablePart part)
+			{
+				// kerbalEVA doesn't seem to init at origin if we aren't explicit
+				var go = UnityEngine.Object.Instantiate(part.iconPrefab, Vector3.zero, Quaternion.identity) as GameObject;
+
+				// The kerbals are initially facing along positive Z so we'll be looking at their backs if we don't
+				// rotate them around
+				if (part.name.StartsWith(KerbalEvaSubstring))
+					go.transform.rotation = Quaternion.AngleAxis(180f, Vector3.up);
+
+				go.SetLayerRecursive(GameObjectLayer);
+				go.SetActive(true);
+				return go;
+			}
+
+			private static void AdjustScaleAndCameraPosition(GameObject icon, Camera camera)
+			{
+				// get size of prefab
+				var bounds = CalculateBounds(icon);
+				float sphereDiameter = Mathf.Max(bounds.size.x, bounds.size.y, bounds.size.z);
+
+				// rescale to size 1 unit so that object will take up as much viewspace as possible in ortho cam (with ortho size = 0.5)
+				var currentScale = icon.transform.localScale;
+				float scaleFactor = 1f / sphereDiameter;
+				icon.transform.localScale = currentScale * scaleFactor;
+
+				icon.transform.position = -bounds.center * scaleFactor;
+
+				camera.transform.position = Vector3.zero;
+
+				// back out, else we'll be inside the model (which is scaled at 1 unit so this should be plenty)
+				camera.transform.Translate(new Vector3(0f, 0f, -5f), Space.Self);
+				camera.transform.LookAt(Vector3.zero, Vector3.up);
+			}
+
+
+			public static Texture2D Create2D(AvailablePart part, int width, int height, Quaternion orientation, Color backgroundColor)
+			{
+				var cam = CreateCamera(width, height, backgroundColor);
+				var icon = CreateIcon(part);
+				var light = CreateLight();
+
+				var texture = new Texture2D(width, height, TextureFormat.ARGB32, false);
+				var rt = RenderTexture.GetTemporary(width, height, 24);
+				var prevRt = RenderTexture.active;
+
+				RenderTexture.active = rt;
+
+				icon.transform.rotation = orientation * icon.transform.rotation;
+
+				AdjustScaleAndCameraPosition(icon, cam);
+
+				cam.targetTexture = rt;
+				cam.pixelRect = new Rect(0f, 0f, width, height); // doc says this should be ignored but doesn't seem to be (?) -- rendered area very small once targetTexture is set
+				cam.Render();
+
+				texture.ReadPixels(new Rect(0f, 0f, width, height), 0, 0, false);
+				texture.Apply();
+
+				RenderTexture.active = prevRt;
+				RenderTexture.ReleaseTemporary(rt);
+				UnityEngine.Object.DestroyImmediate(light);
+				UnityEngine.Object.DestroyImmediate(cam);
+				UnityEngine.Object.DestroyImmediate(icon);
+
+				return texture;
+			}
+
+			private static Bounds CalculateBounds(GameObject go)
+			{
+				var renderers = go.GetComponentsInChildren<Renderer>(true).ToList();
+
+				if (renderers.Count == 0) return default(Bounds);
+
+				var boundsList = new List<Bounds>();
+
+				renderers.ForEach(r =>
+					{
+						if (r.tag == IconHiddenTag) return;
+
+						if (r is SkinnedMeshRenderer)
+						{
+							var smr = r as SkinnedMeshRenderer;
+
+							// the localBounds of the SkinnedMeshRenderer are initially large enough
+							// to accomodate all animation frames; they're likely to be far off for 
+							// parts that do a lot of animation-related movement (like solar panels expanding)
+							//
+							// We can get correct mesh bounds by baking the current animation into a mesh
+							// note: vertex positions in baked mesh are relative to smr.transform; any scaling
+							// is already baked in
+							var mesh = new Mesh();
+							smr.BakeMesh(mesh);
+
+							// while the mesh bounds will now be correct, they don't consider orientation at all.
+							// If a long part is oriented along the wrong axis in world space, the bounds we'd get
+							// here could be very wrong. We need to come up with essentially the renderer bounds:
+							// a bounding box in world space that encompasses the mesh
+							var m = Matrix4x4.TRS(smr.transform.position, smr.transform.rotation, Vector3.one
+								/* remember scale already factored in!*/);
+							var vertices = mesh.vertices;
+
+							var smrBounds = new Bounds(m.MultiplyPoint3x4(vertices[0]), Vector3.zero);
+
+							for (int i = 1; i < vertices.Length; ++i)
+								smrBounds.Encapsulate(m.MultiplyPoint3x4(vertices[i]));
+
+							UnityEngine.Object.Destroy(mesh);
+
+							boundsList.Add(smrBounds);
+						}
+						else if (r is MeshRenderer) // note: there are ParticleRenderers, LineRenderers, and TrailRenderers
+						{
+							r.gameObject.GetComponent<MeshFilter>().sharedMesh.RecalculateBounds();
+							boundsList.Add(r.bounds);
+						}
+					});
+
+				Bounds bounds = boundsList[0];
+
+				boundsList.Skip(1).ToList().ForEach(b => bounds.Encapsulate(b));
+
+				return bounds;
+			}
 		}
 
 		private void OnGUI(){
@@ -621,7 +794,7 @@ namespace AutoAsparagus {
 			GUILayout.EndHorizontal();
 
 			GUILayout.BeginHorizontal();
-			if (GUILayout.Button (new GUIContent("Delete all "+partsWeCanUse[partToUseIndex].title,nofuelTexture, "Delete fuel lines"), picbutton)) {
+			if (GUILayout.Button (new GUIContent("Delete all "+partsWeCanUse[partToUseIndex].title,nofuelTexture, "Delete all "+partsWeCanUse[partToUseIndex].title+" parts on the ship"), picbutton)) {
 				osd("Deleting parts...");
 				mystate = ASPState.DELETEFUEL;
 			}
