@@ -290,7 +290,7 @@ namespace AutoAsparagus
 			if (p==null){
 				AAprint (header + ": part is null!");
 			} else {
-				AAprint (header + ": " + p.name.ToString () + ": " + getFriendlyName(p.GetInstanceID().ToString ()) + "/"+ p.GetInstanceID().ToString()+ "/" + p.symmetryCounterparts.Count.ToString ()+"/"+p.children.Count.ToString()+"/"+p.attachMode.ToString());
+				AAprint (header + ": " + p.name.ToString () + ": " + getFriendlyName(p.craftID.ToString ()) + "/"+ p.craftID.ToString()+ "/" + p.symmetryCounterparts.Count.ToString ()+"/"+p.children.Count.ToString()+"/"+p.attachMode.ToString());
 			}
 			#if superDEBUG
 			printTransform ("transform", p.transform);
@@ -303,7 +303,7 @@ namespace AutoAsparagus
 			dumpPartModule (pm);
 			}
 			foreach (Part child in p.children) {
-			AAprint ("child: "+child.name.ToString () + ": " + child.GetInstanceID().ToString () + "/" + child.symmetryCounterparts.Count.ToString ()+"/"+child.children.Count.ToString());
+			AAprint ("child: "+child.name.ToString () + ": " + child.craftID().ToString () + "/" + child.symmetryCounterparts.Count.ToString ()+"/"+child.children.Count.ToString());
 			}
 			#endif
 		}
