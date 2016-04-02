@@ -219,13 +219,15 @@ namespace AutoAsparagus
 
 		}
 
-		internal void OnDestroy ()
-		{
+		private void destroyAppButton () {
 			if (aspButton != null) {
 				aspButton.Destroy ();
 			}
 			ApplicationLauncher.Instance.RemoveModApplication (appButton);
+		}
 
+		internal void OnDestroy ()
+		{
 			#if DEBUG
 			// don't save configs because KramaxReload screws up PluginConfiguration
 			#else
@@ -294,6 +296,7 @@ namespace AutoAsparagus
 
 			//setup app launcher after toolbar in case useBlizzy=true but user removed toolbar
 			GameEvents.onGUIApplicationLauncherReady.Add(setupAppButton);
+			GameEvents.onGUIApplicationLauncherDestroyed.Add(destroyAppButton);
 
 			ASPConsoleStuff.AAprint ("Add onEditorShipModified hook");
 			GameEvents.onEditorShipModified.Add (onCraftChange);
@@ -324,6 +327,8 @@ namespace AutoAsparagus
 				}
 				smartstageTexture = loadTexture ("SmartStage/SmartStage38");
 				SmartStageAvailable = true;
+			} else {
+				useSmartStage = false;
 			}
 			versionString = Assembly.GetCallingAssembly ().GetName ().Version.ToString ();
 
