@@ -5,6 +5,7 @@ using System.Linq;
 using System.Collections.Generic;
 using System.Reflection;
 using KSP.IO;
+using KSP.UI.Screens;
 
 #if DEBUG
 using KramaxReloadExtensions;
@@ -272,6 +273,7 @@ namespace AutoAsparagus
 
 			ASPConsoleStuff.AAprint ("Setting up toolbar");
 			if (ToolbarManager.ToolbarAvailable) {
+				ASPConsoleStuff.AAprint ("Blizzy's toolbar available");
 				aspButton = ToolbarManager.Instance.add ("AutoAsparagus", "aspButton");
 				aspButton.TexturePath = "AutoAsparagus/asparagus";
 				aspButton.ToolTip = "AutoAsparagus";
@@ -285,19 +287,23 @@ namespace AutoAsparagus
 				};
 				aspButton.Visible = useBlizzy;
 			} else {
+				ASPConsoleStuff.AAprint ("Blizzy's toolbar not available, using stock toolbar");
 				aspButton = null;
 				useBlizzy = false;
 			}
 
 			//setup app launcher after toolbar in case useBlizzy=true but user removed toolbar
-			setupAppButton ();
+			GameEvents.onGUIApplicationLauncherReady.Add(setupAppButton);
 
+			ASPConsoleStuff.AAprint ("Add onEditorShipModified hook");
 			GameEvents.onEditorShipModified.Add (onCraftChange);
+			ASPConsoleStuff.AAprint ("End of Awake()");
 		}
 
 		// Called after Awake()
 		public void Start ()
 		{
+			ASPConsoleStuff.AAprint ("Start()");
 			aspTexture = loadTexture ("AutoAsparagus/asparagus");
 			onionTexture = loadTexture ("AutoAsparagus/onion");
 			nofuelTexture = loadTexture ("AutoAsparagus/nofuel");
@@ -320,11 +326,16 @@ namespace AutoAsparagus
 				SmartStageAvailable = true;
 			}
 			versionString = Assembly.GetCallingAssembly ().GetName ().Version.ToString ();
+
+			ASPConsoleStuff.AAprint ("End of Start()");
 		}
 
 		public void setupAppButton ()
 		{
-			if (!setupApp && ApplicationLauncher.Ready) {
+			ASPConsoleStuff.AAprint ("setupAppButton");
+			if (setupApp) {
+				ASPConsoleStuff.AAprint ("app Button already set up");
+			} else if (ApplicationLauncher.Ready) {
 				setupApp = true;
 				if (appButton == null) {
 
@@ -339,8 +350,9 @@ namespace AutoAsparagus
 						appButton.VisibleInScenes = ApplicationLauncher.AppScenes.VAB | ApplicationLauncher.AppScenes.SPH;
 					}
 				}
+			} else {
+				ASPConsoleStuff.AAprint ("ApplicationLauncher.Ready is false");
 			}
-
 		}
 
 		public void doNothing ()
@@ -376,9 +388,11 @@ namespace AutoAsparagus
 				foreach (AvailablePart ap in partsWeCanUse) {
 					// Thanks to xEvilReeperx for the icon code!
 					// http://forum.kerbalspaceprogram.com/index.php?/topic/7542-the-official-unoffical-quothelp-a-fellow-plugin-developerquot-thread/&do=findComment&comment=2355711
-					Texture2D xEvilReeperxRules = PartIconGenerator.Create2D (ap, 32, 32,
-						                              Quaternion.AngleAxis (-15f, Vector3.right) * Quaternion.AngleAxis (-30f, Vector3.up), Color.clear);
-					partGrid [x] = new GUIContent (" " + ap.title, xEvilReeperxRules, ap.title + " (" + ap.name + ")");
+					//Texture2D xEvilReeperxRules = PartIconGenerator.Create2D (ap, 32, 32,
+					//	                              Quaternion.AngleAxis (-15f, Vector3.right) * Quaternion.AngleAxis (-30f, Vector3.up), Color.clear);
+
+					//partGrid [x] = new GUIContent (" " + ap.title, xEvilReeperxRules, ap.title + " (" + ap.name + ")");
+					partGrid [x] = new GUIContent (" " + ap.title, ap.title + " (" + ap.name + ")");
 
 					ASPConsoleStuff.AAprint ("partGrid[" + x.ToString () + "]: " + ap.title);
 
@@ -457,7 +471,7 @@ namespace AutoAsparagus
 		private const int IconWidth = 256;
 		private const int IconHeight = 256;
 
-		public static class PartIconGenerator
+		/*public static class PartIconGenerator
 		{
 			private const string IconHiddenTag = "Icon_Hidden";
 			private const string KerbalEvaSubstring = "kerbal";
@@ -467,8 +481,9 @@ namespace AutoAsparagus
 
 			private static Camera CreateCamera (int pixelWidth, int pixelHeight, Color backgroundColor)
 			{
-				var camGo = new GameObject ("PartIconGenerator.Camera", typeof(Camera));
-				var cam = camGo.camera;
+				//var camGo = new GameObject ("PartIconGenerator.Camera", typeof(Camera));
+				//var cam = camGo.camera;
+				Camera cam = new Camera();
 
 				cam.enabled = false;
 				cam.cullingMask = (1 << GameObjectLayer);
@@ -597,7 +612,7 @@ namespace AutoAsparagus
 						// here could be very wrong. We need to come up with essentially the renderer bounds:
 						// a bounding box in world space that encompasses the mesh
 						var m = Matrix4x4.TRS (smr.transform.position, smr.transform.rotation, Vector3.one
-								/* remember scale already factored in!*/
+								// remember scale already factored in!
 						        );
 						var vertices = mesh.vertices;
 
@@ -621,7 +636,7 @@ namespace AutoAsparagus
 
 				return bounds;
 			}
-		}
+		}*/
 
 		private void OnGUI ()
 		{
