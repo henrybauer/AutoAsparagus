@@ -7,20 +7,20 @@ using System.Reflection;
 using KSP.IO;
 using KSP.UI.Screens;
 
-#if DEBUG
-using KramaxReloadExtensions;
-#endif
+//#if DEBUG
+//using KramaxReloadExtensions;
+//#endif
 
 // FIXME project-wide: change all parent/child checking to check grandparents/grandchildren if parent/child is a fuel tank (or anything except decoupler or fuel line)
 
 namespace AutoAsparagus
 {
 	[KSPAddon (KSPAddon.Startup.EditorAny, false)]
-	#if DEBUG
-	public class AutoAsparagus: ReloadableMonoBehaviour
-#else
+//	#if DEBUG
+//	public class AutoAsparagus: ReloadableMonoBehaviour
+//#else
 	public class AutoAsparagus: MonoBehaviour
-#endif
+//#endif
 	{
 		private IButton aspButton;
 		private bool visible = false;
@@ -830,7 +830,7 @@ namespace AutoAsparagus
 						}
 						break;
 					case ASPState.SMARTSTAGE:
-						mystate = ASPState.IDLE;
+						mystate = ASPState.FINALREFRESH;
 						try {
 							computeStagesMethod.Invoke (null, new object[] { });
 						} catch (Exception e) {

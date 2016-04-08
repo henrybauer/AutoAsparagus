@@ -2,18 +2,19 @@ using System;
 using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
+using KSP.UI.Screens;
 
-#if DEBUG
-using KramaxReloadExtensions;
-#endif
+//#if DEBUG
+//using KramaxReloadExtensions;
+//#endif
 
 namespace AutoAsparagus
 {
-	#if DEBUG
-	public class ASPFuelLine: ReloadableMonoBehaviour
-	#else
+//	#if DEBUG
+//	public class ASPFuelLine: ReloadableMonoBehaviour
+//	#else
 	public class ASPFuelLine: MonoBehaviour
-	#endif
+//	#endif
 	{
 
 		private class FuelSet
@@ -921,7 +922,7 @@ getclosest of onionRing[2], wire up onionRing[2].Count/2 tanks, etc
 				}
 			}
 
-			Staging.SortIcons ();
+			//StageManager.Instance.SortIcons (true);
 
 		}
 
@@ -1054,7 +1055,7 @@ getclosest of onionRing[2], wire up onionRing[2].Count/2 tanks, etc
 				tanksToConnect.Remove (currentTank);
 			}
 
-			Staging.SortIcons ();
+			//StageManager.Instance.SortIcons (true);
 
 		}
 
