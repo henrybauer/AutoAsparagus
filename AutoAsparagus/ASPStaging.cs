@@ -21,25 +21,6 @@ namespace AutoAsparagus
 		{
 			ASPConsoleStuff.printPart ("Setting to stage " + stage.ToString (), p);
 			p.inverseStage = stage;
-			//p.UpdateStageability (false, true);
-			return;
-			ASPConsoleStuff.printPart ("staging icon: " + p.stagingIcon, p);
-			StageIcon myIcon = null;
-			foreach (KSP.UI.Screens.StageGroup sg in StageManager.Instance.Stages) {
-				foreach (StageIcon i in sg.Icons) {
-					ASPConsoleStuff.print ("Staging icon for stage " + sg.inverseStageIndex.ToString () + ": " + i.name + "/" + i.Part.name);
-					if (i.Part == p) {
-						ASPConsoleStuff.print ("found icon!");
-						myIcon = i;
-					}
-				}
-			}
-			if (myIcon == null) {
-				return;
-			}
-			myIcon.Stage.RemoveIcon (myIcon);
-			//StageManager.Instance.Stages [p.inverseStage].RemoveIcon (myIcon);
-			StageManager.Instance.Stages [stage].AddIcon (myIcon);
 		}
 
 		static private void stageChildren (Part p, int stage)
