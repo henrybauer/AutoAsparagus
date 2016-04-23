@@ -91,7 +91,7 @@ namespace AutoAsparagus
 
 		private Vector2 mousepos;
 		private Boolean editorlocked = false;
-		private ApplicationLauncherButton appButton = null;
+		private static ApplicationLauncherButton appButton = null;
 		private Boolean setupApp = false;
 
 		public int partToUseIndex = 0;
@@ -219,12 +219,14 @@ namespace AutoAsparagus
 
 		}
 
+/*
 		private void destroyAppButton () {
 			if (aspButton != null) {
 				aspButton.Destroy ();
 			}
 			ApplicationLauncher.Instance.RemoveModApplication (appButton);
 		}
+*/
 
 		internal void OnDestroy ()
 		{
@@ -296,7 +298,6 @@ namespace AutoAsparagus
 
 			//setup app launcher after toolbar in case useBlizzy=true but user removed toolbar
 			GameEvents.onGUIApplicationLauncherReady.Add(setupAppButton);
-			GameEvents.onGUIApplicationLauncherDestroyed.Add(destroyAppButton);
 
 			ASPConsoleStuff.AAprint ("Add onEditorShipModified hook");
 			GameEvents.onEditorShipModified.Add (onCraftChange);
@@ -354,6 +355,9 @@ namespace AutoAsparagus
 					} else {
 						appButton.VisibleInScenes = ApplicationLauncher.AppScenes.VAB | ApplicationLauncher.AppScenes.SPH;
 					}
+				} else {
+					appButton.onTrue = appOnTrue;
+					appButton.onFalse = appOnFalse;
 				}
 			} else {
 				ASPConsoleStuff.AAprint ("ApplicationLauncher.Ready is false");
