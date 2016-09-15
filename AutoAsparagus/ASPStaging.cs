@@ -143,7 +143,7 @@ namespace AutoAsparagus
 
 			// Check if this part has any resource that would actually flow through a fuel line
 			PartResourceDefinition resource;
-			foreach (PartResource pr in rl.list) {
+			foreach (PartResource pr in rl.dict.Values) {
 				ASPConsoleStuff.printPart ("isFuelTank: part has resource named: " + pr.resourceName, p);
 				resource = PartResourceLibrary.Instance.GetDefinition (pr.resourceName);
 				if (resource.resourceFlowMode == ResourceFlowMode.STACK_PRIORITY_SEARCH) {
