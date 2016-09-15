@@ -3,9 +3,9 @@
 "URL":"http://ksp-avc.cybutek.net/version.php?id=22",
 "DOWNLOAD":"http://forum.kerbalspaceprogram.com/threads/61238",
 "VERSION": {
-   "MAJOR":2,"MINOR":2,"PATCH":2,"BUILD":0
+   "MAJOR":2,"MINOR":2,"PATCH":3,"BUILD":0
 },
 "KSP_VERSION": {
-   "MAJOR":1,"MINOR":1,"PATCH":3
+   "MAJOR":1,"MINOR":2,"PATCH":0
 }
 }
