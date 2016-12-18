@@ -1,0 +1,100 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{8F30621B-3698-46E7-8EE1-95ED269EB5EE}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <NoStandardLibraries>false</NoStandardLibraries>
+    <AssemblyName>AutoAsparagus</AssemblyName>
+    <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+    <TargetFrameworkProfile />
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup>
+    <RootNamespace>AutoAsparagus</RootNamespace>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="Assembly-CSharp">
+      <HintPath>..\Kerbal Space Program\KSP_Data\Managed\Assembly-CSharp.dll</HintPath>
+    </Reference>
+    <Reference Include="System" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="System.Xml" />
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="UnityEngine">
+      <HintPath>..\Kerbal Space Program\KSP_Data\Managed\UnityEngine.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include=".gitattributes" />
+    <Content Include=".gitignore" />
+    <Content Include="AutoAsparagus\AutoAsparagus.csproj" />
+    <Content Include="AutoAsparagus\GameData\asparagus-app.png" />
+    <Content Include="AutoAsparagus\GameData\asparagus.png" />
+    <Content Include="AutoAsparagus\GameData\blizzy.png" />
+    <Content Include="AutoAsparagus\GameData\fuel.png" />
+    <Content Include="AutoAsparagus\GameData\launchclamp.png" />
+    <Content Include="AutoAsparagus\GameData\nofuel.png" />
+    <Content Include="AutoAsparagus\GameData\onion.png" />
+    <Content Include="AutoAsparagus\GameData\parachute.png" />
+    <Content Include="AutoAsparagus\GameData\rainbow.png" />
+    <Content Include="AutoAsparagus\GameData\sepratron.png" />
+    <Content Include="AutoAsparagus\GameData\strut.png" />
+    <Content Include="CustomAsparagus\asparagus.png" />
+    <Content Include="CustomAsparagus\asparagusnew.png" />
+    <Content Include="CustomAsparagus\launchclamp.png" />
+    <Content Include="CustomAsparagus\nofuel.png" />
+    <Content Include="CustomAsparagus\onion.png" />
+    <Content Include="CustomAsparagus\parachute.png" />
+    <Content Include="CustomAsparagus\sepratron.png" />
+    <Content Include="CustomAsparagus\strut.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="AutoAsparagus\GameData\AutoAsparagus.version" />
+    <None Include="CustomAsparagus\asparagus.psd" />
+    <None Include="CustomAsparagus\asparagusnew.psd" />
+    <None Include="CustomAsparagus\launchclamp.psd" />
+    <None Include="CustomAsparagus\nofuel.psd" />
+    <None Include="CustomAsparagus\onion.psd" />
+    <None Include="CustomAsparagus\parachute.psd" />
+    <None Include="CustomAsparagus\sepratron.psd" />
+    <None Include="CustomAsparagus\strut.psd" />
+    <None Include="README.md" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="AutoAsparagus\ASPConsoleStuff.cs" />
+    <Compile Include="AutoAsparagus\ASPFuelLine.cs" />
+    <Compile Include="AutoAsparagus\ASPInstallChecker.cs" />
+    <Compile Include="AutoAsparagus\ASPStaging.cs" />
+    <Compile Include="AutoAsparagus\AutoAsparagus.cs" />
+    <Compile Include="AutoAsparagus\ToolbarWrapper.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include=".git\" />
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSHARP.Targets" />
+  <ProjectExtensions>
+    <VisualStudio AllowExistingFolder="true" />
+  </ProjectExtensions>
+</Project>
