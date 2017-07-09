@@ -576,7 +576,7 @@ namespace AutoAsparagus
 			fuelSetsToConnect = new List<FuelSet> ();
 		}
 
-		private static float distanceBetweenParts (Part a, Part b)
+		public static float distanceBetweenParts (Part a, Part b)
 		{
 			return Vector3.Distance (a.transform.position, b.transform.position);
 		}

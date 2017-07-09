@@ -108,8 +108,28 @@ namespace AutoAsparagus
 		public static Part badStartTank = null;
 		public static Part badDestTank = null;
 		public static List<Part> blockingTanks = new List<Part> ();
+        private LineRenderer line = null;
+        GameObject lineObj = new GameObject("Line");
+        private const int lineLayer = 11; // UIDialog layer per http://forum.kerbalspaceprogram.com/index.php?/topic/84273-unity-layers-and-tags-updated-09-march-2017/
 
-		public static List<Part> tanks = new List<Part> ();
+        public static List<Part> tanks = new List<Part> ();
+
+        private void drawLineBetweenBadParts()
+        {
+            float dist = ASPFuelLine.distanceBetweenParts(badStartTank, badDestTank);
+            line.SetPosition(1, Vector3.forward * dist);
+
+            line.transform.parent = badStartTank.transform;
+            line.transform.localPosition = Vector3.zero;
+            line.transform.localEulerAngles = Vector3.zero;
+
+            //line.SetPosition(1, line.transform.InverseTransformPoint(badDestTank.transform.position).normalized);
+            line.transform.localRotation = Quaternion.LookRotation(line.transform.InverseTransformPoint(badDestTank.transform.position).normalized);
+            lineObj.layer = lineLayer;
+            line.enabled = true;
+
+
+        }
 
 		private static Texture2D loadTexture (string path)
 		{
@@ -304,37 +324,52 @@ namespace AutoAsparagus
 			ASPConsoleStuff.AAprint ("End of Awake()");
 		}
 
-		// Called after Awake()
-		public void Start ()
-		{
-			ASPConsoleStuff.AAprint ("Start()");
-			aspTexture = loadTexture ("AutoAsparagus/asparagus");
-			onionTexture = loadTexture ("AutoAsparagus/onion");
-			nofuelTexture = loadTexture ("AutoAsparagus/nofuel");
-			launchclampTexture = loadTexture ("AutoAsparagus/launchclamp");
-			parachuteTexture = loadTexture ("AutoAsparagus/parachute");
-			//strutTexture = loadTexture ("AutoAsparagus/strut");
-			sepratronTexture = loadTexture ("AutoAsparagus/sepratron");
-			blizzyTexture = loadTexture ("AutoAsparagus/blizzy");
-			rainbowTexture = loadTexture ("AutoAsparagus/rainbow");
+        // Called after Awake()
+        public void Start()
+        {
+            ASPConsoleStuff.AAprint("Start()");
+            aspTexture = loadTexture("AutoAsparagus/asparagus");
+            onionTexture = loadTexture("AutoAsparagus/onion");
+            nofuelTexture = loadTexture("AutoAsparagus/nofuel");
+            launchclampTexture = loadTexture("AutoAsparagus/launchclamp");
+            parachuteTexture = loadTexture("AutoAsparagus/parachute");
+            //strutTexture = loadTexture ("AutoAsparagus/strut");
+            sepratronTexture = loadTexture("AutoAsparagus/sepratron");
+            blizzyTexture = loadTexture("AutoAsparagus/blizzy");
+            rainbowTexture = loadTexture("AutoAsparagus/rainbow");
 
-			AssemblyLoader.LoadedAssembly SmartStage = AssemblyLoader.loadedAssemblies.SingleOrDefault (a => a.dllName == "SmartStage");
-			if (SmartStage != null) {
-				ASPConsoleStuff.AAprint ("found SmartStage");
-				try {
-					computeStagesMethod = SmartStage.assembly.GetTypes ().SingleOrDefault (t => t.Name == "SmartStage").GetMethod ("computeStages");
-				} catch (Exception e) {
-					UnityEngine.Debug.LogError ("Error finding the method definition\n" + e.StackTrace);
-				}
-				smartstageTexture = loadTexture ("SmartStage/SmartStage38");
-				SmartStageAvailable = true;
-			} else {
-				useSmartStage = false;
-			}
-			versionString = Assembly.GetCallingAssembly ().GetName ().Version.ToString ();
+            AssemblyLoader.LoadedAssembly SmartStage = AssemblyLoader.loadedAssemblies.SingleOrDefault(a => a.dllName == "SmartStage");
+            if (SmartStage != null)
+            {
+                ASPConsoleStuff.AAprint("found SmartStage");
+                try
+                {
+                    computeStagesMethod = SmartStage.assembly.GetTypes().SingleOrDefault(t => t.Name == "SmartStage").GetMethod("computeStages");
+                }
+                catch (Exception e)
+                {
+                    UnityEngine.Debug.LogError("Error finding the method definition\n" + e.StackTrace);
+                }
+                smartstageTexture = loadTexture("SmartStage/SmartStage38");
+                SmartStageAvailable = true;
+            }
+            else
+            {
+                useSmartStage = false;
+            }
+            versionString = Assembly.GetCallingAssembly().GetName().Version.ToString();
 
-			ASPConsoleStuff.AAprint ("End of Start()");
-		}
+            line = lineObj.AddComponent<LineRenderer>();
+            line.material = new Material(Shader.Find("Particles/Additive"));
+            line.useWorldSpace = false;
+
+            line.SetColors(Color.red, Color.red);
+            line.SetWidth(0.2f, 0.2f);
+            line.SetVertexCount(2);
+            line.SetPosition(0, Vector3.zero);
+
+            ASPConsoleStuff.AAprint("End of Start()");
+        }
 
 		public void setupAppButton ()
 		{
@@ -371,6 +406,9 @@ namespace AutoAsparagus
 		private void onCraftChange (ShipConstruct craft)
 		{
 			tanks = null;
+            badDestTank = null;
+            badStartTank = null;
+            if (line != null) { line.enabled = false; }
 		}
 
 		public void appOnTrue ()
@@ -446,9 +484,9 @@ namespace AutoAsparagus
 				visible = false;
 			}
 			tanks = null;
-		}
+        }
 
-		public void appOnFalse ()
+        public void appOnFalse ()
 		{
 			visible = false;
 			EditorLogic editor = EditorLogic.fetch;
@@ -676,47 +714,67 @@ namespace AutoAsparagus
 								if (tanks == null) {
 									tanks = ASPStaging.findFuelTanks (parts);
 								} else {
-									foreach (Part p in parts) {
-										if ((vizualize) && (p != null)) {
-											if ((badStartTank != null) && (p == badStartTank)) {
-												Vector3 position = Camera.main.WorldToScreenPoint (p.transform.position);
-												GUI.Label (new Rect (position.x, Screen.height - position.y, 200, 30), "Start tank");
-												badStartTank.SetHighlightColor (Color.blue);
-												badStartTank.SetHighlight (true, false);
-												badStartTank.highlightType = Part.HighlightType.AlwaysOn;
-											} else if ((badDestTank != null) && (p == badDestTank)) {
-												Vector3 position = Camera.main.WorldToScreenPoint (p.transform.position);
-												GUI.Label (new Rect (position.x, Screen.height - position.y, 200, 30), "Destination tank");
-												badDestTank.SetHighlightColor (Color.blue);
-												badDestTank.SetHighlight (true, false);
-												badDestTank.highlightType = Part.HighlightType.AlwaysOn;
-											} else if (blockingTanks.Contains (p)) {
-												Vector3 position = Camera.main.WorldToScreenPoint (p.transform.position);
-												GUI.Label (new Rect (position.x, Screen.height - position.y, 200, 30), "X");
-												p.SetHighlightColor (Color.red);
-												p.SetHighlight (true, false);
-												p.highlightType = Part.HighlightType.AlwaysOn;
-											} else if (tanks.Contains (p)) {
-												// draw labels on the tanks
-												Vector3 position = Camera.main.WorldToScreenPoint (p.transform.position);
-												string label = "L" + ASPFuelLine.countDecouplersToRoot (p).ToString ();
-												#if DEBUG
+                                        if (vizualize) {
+                                            if ((badDestTank != null) && (badStartTank != null))
+                                            {
+                                                drawLineBetweenBadParts();
+                                            }
+                                            foreach (Part p in parts)
+                                            {
+                                                if (p != null)
+                                                {
+                                                    if ((badStartTank != null) && (p == badStartTank))
+                                                    {
+                                                        Vector3 position = Camera.main.WorldToScreenPoint(p.transform.position);
+                                                        GUI.Label(new Rect(position.x, Screen.height - position.y, 200, 30), "Start tank");
+                                                        badStartTank.SetHighlightColor(Color.blue);
+                                                        badStartTank.SetHighlight(true, false);
+                                                        badStartTank.highlightType = Part.HighlightType.AlwaysOn;
+                                                    }
+                                                    else if ((badDestTank != null) && (p == badDestTank))
+                                                    {
+                                                        Vector3 position = Camera.main.WorldToScreenPoint(p.transform.position);
+                                                        GUI.Label(new Rect(position.x, Screen.height - position.y, 200, 30), "Destination tank");
+                                                        badDestTank.SetHighlightColor(Color.blue);
+                                                        badDestTank.SetHighlight(true, false);
+                                                        badDestTank.highlightType = Part.HighlightType.AlwaysOn;
+                                                    }
+                                                    else if (blockingTanks.Contains(p))
+                                                    {
+                                                        Vector3 position = Camera.main.WorldToScreenPoint(p.transform.position);
+                                                        GUI.Label(new Rect(position.x, Screen.height - position.y, 200, 30), "X");
+                                                        p.SetHighlightColor(Color.red);
+                                                        p.SetHighlight(true, false);
+                                                        p.highlightType = Part.HighlightType.AlwaysOn;
+                                                    }
+                                                    else if (tanks.Contains(p))
+                                                    {
+                                                        // draw labels on the tanks
+                                                        Vector3 position = Camera.main.WorldToScreenPoint(p.transform.position);
+                                                        string label = "L" + ASPFuelLine.countDecouplersToRoot(p).ToString();
+#if DEBUG
 												//label = label+": "+ASPConsoleStuff.getFriendlyName (p.craftID.ToString ());
-												#endif
-												GUI.Label (new Rect (position.x, Screen.height - position.y, 200, 30), label);
-												if ((p != badStartTank) && (p != badDestTank) && (!blockingTanks.Contains (p))) {
-													p.SetHighlightColor (Color.green);
-													p.SetHighlight (true, false);
-													p.highlightType = Part.HighlightType.AlwaysOn;
-												}
-											} else if (ASPStaging.isDecoupler (p)) {
-												p.SetHighlightColor (Color.magenta);
-												p.SetHighlight (true, false);
-												p.highlightType = Part.HighlightType.AlwaysOn;
-											} else {
-												p.SetHighlight (false, false);
-											}
-										}
+#endif
+                                                        GUI.Label(new Rect(position.x, Screen.height - position.y, 200, 30), label);
+                                                        if ((p != badStartTank) && (p != badDestTank) && (!blockingTanks.Contains(p)))
+                                                        {
+                                                            p.SetHighlightColor(Color.green);
+                                                            p.SetHighlight(true, false);
+                                                            p.highlightType = Part.HighlightType.AlwaysOn;
+                                                        }
+                                                    }
+                                                    else if (ASPStaging.isDecoupler(p))
+                                                    {
+                                                        p.SetHighlightColor(Color.magenta);
+                                                        p.SetHighlight(true, false);
+                                                        p.highlightType = Part.HighlightType.AlwaysOn;
+                                                    }
+                                                    else
+                                                    {
+                                                        p.SetHighlight(false, false);
+                                                    }
+                                                }
+                                            }
 									}
 								}
 							}
@@ -989,6 +1047,7 @@ namespace AutoAsparagus
 			GUILayout.BeginHorizontal ();
 			vizualize = GUILayout.Toggle (vizualize, new GUIContent (" Show visualizations", "Show visualizations such as highlights and levels"), togglestyle);
 			GUILayout.EndHorizontal ();
+            
 
 #if DEBUG
 
@@ -1019,7 +1078,7 @@ namespace AutoAsparagus
 #endif
 
 
-			GUI.DragWindow ();
+            GUI.DragWindow ();
 
 			if (Event.current.type == EventType.Repaint) { // why, Unity, why?
 				tooltip = GUI.tooltip;
