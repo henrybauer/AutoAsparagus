@@ -749,6 +749,7 @@ namespace AutoAsparagus
 						}
 						break;
 					case ASPState.ERROR:
+                        vizualize = true;
 						mystate = ASPState.IDLE;
 						break;
 					case ASPState.ADDASP:
