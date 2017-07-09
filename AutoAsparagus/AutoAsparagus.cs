@@ -367,6 +367,7 @@ namespace AutoAsparagus
             line.SetWidth(0.2f, 0.2f);
             line.SetVertexCount(2);
             line.SetPosition(0, Vector3.zero);
+            line.enabled = false;
 
             ASPConsoleStuff.AAprint("End of Start()");
         }
@@ -408,8 +409,9 @@ namespace AutoAsparagus
 			tanks = null;
             badDestTank = null;
             badStartTank = null;
+            blockingTanks = new List<Part>();
             if (line != null) { line.enabled = false; }
-		}
+    }
 
 		public void appOnTrue ()
 		{
