@@ -333,7 +333,6 @@ namespace AutoAsparagus
             nofuelTexture = loadTexture("AutoAsparagus/nofuel");
             launchclampTexture = loadTexture("AutoAsparagus/launchclamp");
             parachuteTexture = loadTexture("AutoAsparagus/parachute");
-            //strutTexture = loadTexture ("AutoAsparagus/strut");
             sepratronTexture = loadTexture("AutoAsparagus/sepratron");
             blizzyTexture = loadTexture("AutoAsparagus/blizzy");
             rainbowTexture = loadTexture("AutoAsparagus/rainbow");
