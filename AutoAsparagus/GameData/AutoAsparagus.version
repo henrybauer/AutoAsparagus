@@ -3,9 +3,9 @@
 "URL":"https://raw.githubusercontent.com/henrybauer/AutoAsparagus/master/AutoAsparagus/GameData/AutoAsparagus.version",
 "DOWNLOAD":"http://forum.kerbalspaceprogram.com/threads/61238",
 "VERSION": {
-   "MAJOR":2,"MINOR":2,"PATCH":10,"BUILD":0
+   "MAJOR":2,"MINOR":2,"PATCH":11,"BUILD":0
 },
 "KSP_VERSION": {
-   "MAJOR":1,"MINOR":4,"PATCH":2
+   "MAJOR":1,"MINOR":4,"PATCH":3
 }
 }
