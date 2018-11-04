@@ -770,6 +770,12 @@ namespace AutoAsparagus
                                                         p.SetHighlight(true, false);
                                                         p.highlightType = Part.HighlightType.AlwaysOn;
                                                     }
+                                                    else if (p == parts[0])
+                                                    {
+                                                        p.SetHighlightColor(Color.yellow);
+                                                        p.SetHighlight(true, false);
+                                                        p.highlightType = Part.HighlightType.AlwaysOn;
+                                                    }
                                                     else
                                                     {
                                                         p.SetHighlight(false, false);
