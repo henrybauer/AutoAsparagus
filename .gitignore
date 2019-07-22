@@ -4,3 +4,6 @@
 AutoAsparagus/obj/*
 .DS_Store
 AutoAsparagus.userprefs
+.vs
+bin/*
+obj/*
