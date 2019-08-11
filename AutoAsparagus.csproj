@@ -10,7 +10,7 @@
     <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <TargetFrameworkProfile />
-    <ReleaseVersion>2.2.17</ReleaseVersion>
+    <ReleaseVersion>2.2.18</ReleaseVersion>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -22,7 +22,6 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
-    <DebugType>pdbonly</DebugType>
     <Optimize>true</Optimize>
     <OutputPath>bin\Release\</OutputPath>
     <DefineConstants>TRACE</DefineConstants>
@@ -33,37 +32,33 @@
     <RootNamespace>AutoAsparagus</RootNamespace>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="System" />
-    <Reference Include="System.Core" />
     <Reference Include="System.Data" />
     <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="System.Xml" />
     <Reference Include="System.Xml.Linq" />
-    <Reference Include="Assembly-CSharp">
-      <HintPath>..\KSP171\KSP.app\Contents\Resources\Data\Managed\Assembly-CSharp.dll</HintPath>
+    <Reference Include="mscorlib">
+      <HintPath>..\Managed\mscorlib.dll</HintPath>
       <Private>False</Private>
     </Reference>
-    <Reference Include="UnityEngine.AnimationModule">
-      <HintPath>..\KSP171\KSP.app\Contents\Resources\Data\Managed\UnityEngine.AnimationModule.dll</HintPath>
+    <Reference Include="System.Core">
+      <HintPath>..\Managed\System.Core.dll</HintPath>
       <Private>False</Private>
     </Reference>
-    <Reference Include="UnityEngine.CoreModule">
-      <HintPath>..\KSP173\KSP.app\Contents\Resources\Data\Managed\UnityEngine.CoreModule.dll</HintPath>
+    <Reference Include="System">
+      <HintPath>..\Managed\System.dll</HintPath>
+      <Private>False</Private>
     </Reference>
     <Reference Include="UnityEngine">
-      <HintPath>..\KSP173\KSP.app\Contents\Resources\Data\Managed\UnityEngine.dll</HintPath>
+      <HintPath>..\Managed\UnityEngine.dll</HintPath>
+      <Private>False</Private>
     </Reference>
     <Reference Include="UnityEngine.UI">
-      <HintPath>..\KSP173\KSP.app\Contents\Resources\Data\Managed\UnityEngine.UI.dll</HintPath>
+      <HintPath>..\Managed\UnityEngine.UI.dll</HintPath>
+      <Private>False</Private>
     </Reference>
-    <Reference Include="UnityEngine.IMGUIModule">
-      <HintPath>..\KSP173\KSP.app\Contents\Resources\Data\Managed\UnityEngine.IMGUIModule.dll</HintPath>
-    </Reference>
-    <Reference Include="UnityEngine.TextRenderingModule">
-      <HintPath>..\KSP173\KSP.app\Contents\Resources\Data\Managed\UnityEngine.TextRenderingModule.dll</HintPath>
-    </Reference>
-    <Reference Include="UnityEngine.PhysicsModule">
-      <HintPath>..\KSP173\KSP.app\Contents\Resources\Data\Managed\UnityEngine.PhysicsModule.dll</HintPath>
+    <Reference Include="Assembly-CSharp">
+      <HintPath>..\Managed\Assembly-CSharp.dll</HintPath>
+      <Private>False</Private>
     </Reference>
   </ItemGroup>
   <ItemGroup>
