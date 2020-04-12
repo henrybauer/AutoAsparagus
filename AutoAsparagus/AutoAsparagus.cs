@@ -6,6 +6,8 @@ using System.Collections.Generic;
 using System.Reflection;
 using KSP.IO;
 using KSP.UI.Screens;
+using ToolbarControl_NS;
+using ClickThroughFix;
 
 //#if DEBUG
 //using KramaxReloadExtensions;
@@ -15,6 +17,16 @@ using KSP.UI.Screens;
 
 namespace AutoAsparagus
 {
+
+	[KSPAddon(KSPAddon.Startup.MainMenu, true)]
+	public class RegisterToolbar : MonoBehaviour
+	{
+		void Start()
+		{
+			ToolbarControl.RegisterMod(AutoAsparagus.MODID, AutoAsparagus.MODNAME);
+		}
+	}
+
 	[KSPAddon (KSPAddon.Startup.EditorAny, false)]
 //	#if DEBUG
 //	public class AutoAsparagus: ReloadableMonoBehaviour
@@ -22,7 +34,11 @@ namespace AutoAsparagus
 	public class AutoAsparagus: MonoBehaviour
 //#endif
 	{
-		private IButton aspButton;
+		// toolbar
+		internal const string MODID = "AutoAsparagus";
+		internal const string MODNAME = "AutoAsparagus";
+		ToolbarControl toolbarControl;
+
 		private bool visible = false;
 
 		private Rect windowRect = new Rect (0, 0, 1, 1);
@@ -52,14 +68,12 @@ namespace AutoAsparagus
 		private int refreshwait = 0;
 
 		private static Texture2D aspTexture = null;
-		private static Texture2D appTexture = null;
 		private static Texture2D onionTexture = null;
 		private static Texture2D nofuelTexture = null;
 		private static Texture2D parachuteTexture = null;
 		private static Texture2D launchclampTexture = null;
 		private static Texture2D sepratronTexture = null;
 		private static Texture2D smartstageTexture = null;
-		private static Texture2D blizzyTexture = null;
 		private static Texture2D rainbowTexture = null;
 
 		public static bool stageParachutes = false;
@@ -69,7 +83,6 @@ namespace AutoAsparagus
 		public static bool stagesepratrons = true;
 		public static bool SmartStageAvailable = false;
 		public static bool useSmartStage = true;
-		public static bool useBlizzy = false;
 		public static bool vizualize = true;
 		public static bool rainbow = false;
 		private MethodInfo computeStagesMethod = null;
@@ -90,9 +103,6 @@ namespace AutoAsparagus
 		private int windowID = new System.Random ().Next (int.MaxValue);
 
 		private Vector2 mousepos;
-		private Boolean editorlocked = false;
-		private static ApplicationLauncherButton appButton = null;
-		private Boolean setupApp = false;
 
 		public int partToUseIndex = 0;
 		public List<AvailablePart> partsWeCanUse;
@@ -239,23 +249,17 @@ namespace AutoAsparagus
 
 		}
 
-/*
-		private void destroyAppButton () {
-			if (aspButton != null) {
-				aspButton.Destroy ();
-			}
-			ApplicationLauncher.Instance.RemoveModApplication (appButton);
-		}
-*/
 
 		internal void OnDestroy ()
 		{
-			#if DEBUG
+			toolbarControl.OnDestroy();
+			Destroy(toolbarControl);
+
+            #if DEBUG
 			// don't save configs because KramaxReload screws up PluginConfiguration
-			#else
+            #else
 			PluginConfiguration config = PluginConfiguration.CreateForType<AutoAsparagus> ();
 			config.SetValue ("vizualize", vizualize);
-			config.SetValue ("useBlizzy", useBlizzy);
 			config.SetValue ("stageParachutes", stageParachutes);
 			config.SetValue ("stageLaunchClamps", stageLaunchClamps);
 			config.SetValue ("launchClampsStage", launchClampsStage);
@@ -281,7 +285,6 @@ namespace AutoAsparagus
 			PluginConfiguration config = PluginConfiguration.CreateForType<AutoAsparagus> ();
 			config.load ();
 			vizualize = config.GetValue<bool> ("vizualize");
-			useBlizzy = config.GetValue<bool> ("useBlizzy");
 			stageParachutes = config.GetValue<bool> ("stageParachutes");
 			stageLaunchClamps = config.GetValue<bool> ("stageLaunchClamps");
 			launchClampsStage = config.GetValue<int> ("launchClampsStage");
@@ -294,30 +297,6 @@ namespace AutoAsparagus
 				windowRect.y = Screen.height * 0.1f;
 			}
 			#endif
-
-			ASPConsoleStuff.AAprint ("Setting up toolbar");
-			if (ToolbarManager.ToolbarAvailable) {
-				ASPConsoleStuff.AAprint ("Blizzy's toolbar available");
-				aspButton = ToolbarManager.Instance.add ("AutoAsparagus", "aspButton");
-				aspButton.TexturePath = "AutoAsparagus/asparagus";
-				aspButton.ToolTip = "AutoAsparagus";
-				aspButton.Visibility = new GameScenesVisibility (GameScenes.EDITOR);
-				aspButton.OnClick += (e) => {
-					if (visible) {
-						appOnFalse ();
-					} else {
-						appOnTrue ();
-					}
-				};
-				aspButton.Visible = useBlizzy;
-			} else {
-				ASPConsoleStuff.AAprint ("Blizzy's toolbar not available, using stock toolbar");
-				aspButton = null;
-				useBlizzy = false;
-			}
-
-			//setup app launcher after toolbar in case useBlizzy=true but user removed toolbar
-			GameEvents.onGUIApplicationLauncherReady.Add(setupAppButton);
 
 			ASPConsoleStuff.AAprint ("Add onEditorShipModified hook");
 			GameEvents.onEditorShipModified.Add (onCraftChange);
@@ -334,7 +313,6 @@ namespace AutoAsparagus
             launchclampTexture = loadTexture("AutoAsparagus/launchclamp");
             parachuteTexture = loadTexture("AutoAsparagus/parachute");
             sepratronTexture = loadTexture("AutoAsparagus/sepratron");
-            blizzyTexture = loadTexture("AutoAsparagus/blizzy");
             rainbowTexture = loadTexture("AutoAsparagus/rainbow");
 
             AssemblyLoader.LoadedAssembly SmartStage = AssemblyLoader.loadedAssemblies.SingleOrDefault(a => a.dllName == "SmartStage");
@@ -354,50 +332,37 @@ namespace AutoAsparagus
             }
             else
             {
-                useSmartStage = false;
+				ASPConsoleStuff.AAprint("no SmartStage found");
+				useSmartStage = false;
             }
             versionString = Assembly.GetCallingAssembly().GetName().Version.ToString();
 
             line = lineObj.AddComponent<LineRenderer>();
-            line.material = new Material(Shader.Find("Particles/Additive"));
-            line.useWorldSpace = false;
+			line.material = Resources.Load<Material>("Telemetry/TelemetryMaterial");
+			line.useWorldSpace = false;
 
-            line.SetColors(Color.red, Color.red);
-            line.SetWidth(0.2f, 0.2f);
-            line.SetVertexCount(2);
+			line.startColor = Color.red;
+			line.endColor = Color.red;
+			line.startWidth = 0.2f;
+			line.endWidth = 0.2f;
+			line.positionCount = 2;
             line.SetPosition(0, Vector3.zero);
             line.enabled = false;
 
-            ASPConsoleStuff.AAprint("End of Start()");
+			ASPConsoleStuff.AAprint("setting up toolbar");
+			toolbarControl = gameObject.AddComponent<ToolbarControl>();
+			toolbarControl.AddToAllToolbars(appOnTrue, appOnFalse,
+				  ApplicationLauncher.AppScenes.VAB|ApplicationLauncher.AppScenes.SPH,
+				  MODID,
+				  "AutoAsparagusButton",
+				  "AutoAsparagus/asparagus-app",
+				  "AutoAsparagus/asparagus",
+				  MODNAME
+				  );
+
+			ASPConsoleStuff.AAprint("End of Start()");
         }
 
-		public void setupAppButton ()
-		{
-			ASPConsoleStuff.AAprint ("setupAppButton");
-			if (setupApp) {
-				ASPConsoleStuff.AAprint ("app Button already set up");
-			} else if (ApplicationLauncher.Ready) {
-				setupApp = true;
-				if (appButton == null) {
-
-					ASPConsoleStuff.AAprint ("Setting up AppLauncher");
-					ApplicationLauncher appinstance = ApplicationLauncher.Instance;
-					ASPConsoleStuff.AAprint ("Setting up AppLauncher Button");
-					appTexture = loadTexture ("AutoAsparagus/asparagus-app");
-					appButton = appinstance.AddModApplication (appOnTrue, appOnFalse, doNothing, doNothing, doNothing, doNothing, ApplicationLauncher.AppScenes.VAB, appTexture);
-					if (useBlizzy) {
-						appButton.VisibleInScenes = ApplicationLauncher.AppScenes.NEVER;
-					} else {
-						appButton.VisibleInScenes = ApplicationLauncher.AppScenes.VAB | ApplicationLauncher.AppScenes.SPH;
-					}
-				} else {
-					appButton.onTrue = appOnTrue;
-					appButton.onFalse = appOnFalse;
-				}
-			} else {
-				ASPConsoleStuff.AAprint ("ApplicationLauncher.Ready is false");
-			}
-		}
 
 		public void doNothing ()
 		{
@@ -780,21 +745,9 @@ namespace AutoAsparagus
 								}
 							}
 							
-							windowRect = GUILayout.Window (windowID, clampToScreen (windowRect), OnWindow, "AutoAsparagus " + versionString);
+							windowRect = ClickThruBlocker.GUILayoutWindow(windowID, clampToScreen (windowRect), OnWindow, "AutoAsparagus " + versionString);
 
-							mousepos = new Vector2 (Input.mousePosition.x, Input.mousePosition.y);
-
-							if (HighLogic.LoadedSceneIsEditor) {
-								if (windowRect.Contains (mousepos)) {
-									if (editorlocked == false) {
-										EditorLogic.fetch.Lock (true, true, true, "AutoAsparagus");
-										editorlocked = true;
-									}
-								} else if (editorlocked == true) {
-									EditorLogic.fetch.Unlock ("AutoAsparagus");
-									editorlocked = false;
-								}
-							}
+							mousepos = new Vector2(Input.mousePosition.x, Input.mousePosition.y);
 
 							if ((tooltip != null) && (tooltip.Length > 0)) {
 								GUI.depth = 0;
@@ -1030,19 +983,6 @@ namespace AutoAsparagus
 					launchClampsStage = GUILayout.SelectionGrid (launchClampsStage, launchClampsText, 1, togglestyle);
 					GUILayout.EndHorizontal ();
 				}
-			}
-
-			if (aspButton != null) {
-				GUILayout.BeginHorizontal ();
-				useBlizzy = GUILayout.Toggle (useBlizzy, new GUIContent (" Use Blizzy's toolbar", blizzyTexture, "Use Blizzy's toolbar instead of the AppLauncher"), togglestyle);
-				GUILayout.EndHorizontal ();
-				aspButton.Visible = useBlizzy;
-			}
-
-			if (useBlizzy) {
-				appButton.VisibleInScenes = ApplicationLauncher.AppScenes.NEVER;
-			} else {
-				appButton.VisibleInScenes = ApplicationLauncher.AppScenes.VAB | ApplicationLauncher.AppScenes.SPH;
 			}
 
 			GUILayout.BeginHorizontal ();
