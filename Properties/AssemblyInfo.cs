@@ -29,8 +29,8 @@ using System.Runtime.InteropServices;
 //      Build Number
 //      Revision
 //
-[assembly: AssemblyVersion("2.3.0")]
-[assembly: AssemblyFileVersion("2.3.0")]
+[assembly: AssemblyVersion("2.3.1")]
+[assembly: AssemblyFileVersion("2.3.1")]
 
 [assembly: KSPAssemblyDependency("ClickThroughBlocker", 1, 0)]
 [assembly: KSPAssemblyDependency("ToolbarController", 1, 0)]
